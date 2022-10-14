@@ -5,7 +5,7 @@ hoomdxml_reader
 [![codecov](https://codecov.io/gh/chrisiacovella/hoomdxml_reader/branch/main/graph/badge.svg)](https://codecov.io/gh/chrisiacovella/hoomdxml_reader/branch/main)
 
 
-Lightweight code read legacy hoomdxml files
+Lightweight code to read legacy hoomdxml files
 
 ### Copyright
 
