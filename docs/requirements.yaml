@@ -1,12 +1,14 @@
-name: docs
-channels: conda-forge
+name: hoomdxml_reader-docs
+channels: 
+  - conda-forge
 dependencies:
     # Base depends
   - python
   - pip
   - numpy
   - networkx
-
+  - numpydoc
+  - sphinx_rtd_theme
 
 
     # Pip-only installs
