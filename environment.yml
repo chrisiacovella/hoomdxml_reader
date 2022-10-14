@@ -1,0 +1,6 @@
+name: hoomdxml_reader
+channels:
+  - conda-forge
+dependencies:
+  - numpy
+  - networkx

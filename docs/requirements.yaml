@@ -1,9 +1,11 @@
 name: docs
-channels:
+channels: conda-forge
 dependencies:
     # Base depends
   - python
   - pip
+  - numpy
+  - networkx
 
 
 
