@@ -1,8 +1,8 @@
 hoomdxml_reader
 ==============================
 [//]: # (Badges)
-[![GitHub Actions Build Status](https://github.com/REPLACE_WITH_OWNER_ACCOUNT/hoomdxml_reader/workflows/CI/badge.svg)](https://github.com/REPLACE_WITH_OWNER_ACCOUNT/hoomdxml_reader/actions?query=workflow%3ACI)
-[![codecov](https://codecov.io/gh/REPLACE_WITH_OWNER_ACCOUNT/hoomdxml_reader/branch/main/graph/badge.svg)](https://codecov.io/gh/REPLACE_WITH_OWNER_ACCOUNT/hoomdxml_reader/branch/main)
+[![GitHub Actions Build Status](https://github.com/chrisiacovella/hoomdxml_reader/workflows/CI/badge.svg)](https://github.com/chrisiacovella/hoomdxml_reader/actions?query=workflow%3ACI)
+[![codecov](https://codecov.io/gh/chrisiacovella/hoomdxml_reader/branch/main/graph/badge.svg)](https://codecov.io/gh/chrisiacovella/hoomdxml_reader/branch/main)
 
 
 Lightweight code read legacy hoomdxml files
