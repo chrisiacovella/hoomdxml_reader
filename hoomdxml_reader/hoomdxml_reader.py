@@ -47,6 +47,10 @@ class System(object):
         Numpy array containing x, y, z coordinates for each particle.
     types : list, shape=(1,n_particles), dtype=str
         List of type names of all particles in the system.
+    masses : list, shape=(1,n_particles), dtype=float
+        List of masses of all particles in the system.
+    charges : list, shape=(1,n_particles), dtype=float
+        List of charges of all particles in the system.
     bonds : list, shape=(3, n_particles), dtype=(str, int, int)
         List of all bonds in the system.  The first entry per bond is the
         name of the bond (str) as defined in the xml file,
@@ -121,6 +125,15 @@ class System(object):
                 temp_array.append(int(entry_temp[i+j]))
             agg_array.append(temp_array)
         return agg_array
+    
+    def _parse_floats(self, element):
+        temp_element = self._config.find(element)
+        temp_text = temp_element.text
+        agg_array = []
+        entry_temp = temp_text.split()
+        for i in range(0, len(entry_temp)):
+            agg_array.append(float(entry_temp))
+        return agg_array
 
 
     
@@ -150,7 +163,13 @@ class System(object):
         type_element = self._config.find('type')
         type_text = type_element.text
         self._types = type_text.split()
-        
+
+        # parse mass
+        self._masses = _parse_floats(element='mass')
+    
+        # parse charge
+        self._charges = _parse_floats(element='charge')
+
         # parse topological info
         self._bonds = self._parse_topology(element='bond', length=3)
         self._angles = self._parse_topology(element='angle', length=4)
@@ -215,6 +234,16 @@ class System(object):
     def types(self):
         """system types"""
         return self._types
+ 
+    @property
+    def masses(self):
+        """system masses"""
+        return self._masses
+        
+    @property
+    def charges(self):
+        """system charges"""
+        return self._charges
         
     @property
     def bonds(self):
@@ -230,8 +259,6 @@ class System(object):
     def dihedrals(self):
         """system dihedrals"""
         return self._dihedrals
-    
-
         
     @property
     def molecules(self):
