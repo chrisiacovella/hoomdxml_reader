@@ -134,15 +134,15 @@ Other calls that correspond to each section in the data file above:
     system.charges
     system.bond_order
     
- By default, when an XML file is loaded, the code will generate a list of molecules based on the underlying connectivity.  Particles that are bonded together will be considered to be part of the same molecule. For particles with no connections (i.e., bond order is 0), each particle itself will be considered a molecule.  Information about each molecule is saved in a simple container class.
+By default, when an XML file is loaded, the code will generate a list of molecules based on the underlying connectivity.  Particles that are bonded together will be considered to be part of the same molecule. For particles with no connections (i.e., bond order is 0), each particle itself will be considered a molecule.  Information about each molecule is saved in a simple container class.
  
- .. code:: ipython3
+.. code:: ipython3
 
     for molecule in system.molecules:
         print(molecule.name, molecule.particles, molecule.types, molecule.pattern)
  
  
- *output*:
+*output*:
  
 .. code:: ipython3
 
