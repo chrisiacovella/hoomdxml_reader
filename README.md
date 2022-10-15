@@ -7,6 +7,8 @@ hoomdxml_reader
 
 Lightweight code to read legacy hoomdxml files
 
+[Documentation](https://hoomdxml-reader.readthedocs.io/en/latest/)
+
 ### Copyright
 
 Copyright (c) 2022, Chris Iacovella
