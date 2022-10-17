@@ -5,7 +5,6 @@ Module for reading legacy hoomd XML formatted files.
 
 __all__ = ["System"]
 
-import numpy as np
 import networkx as nx
 import xml.etree.ElementTree as ET
 
@@ -43,8 +42,8 @@ class System(object):
     -------
     n_particles : int
         Number of particles in the entire system
-    xyz : numpy array, shape=(3,n_particles), dtype=float
-        Numpy array containing x, y, z coordinates for each particle.
+    xyz : list shape=(3,n_particles), dtype=float
+        List containing a list of x, y, z coordinates of each particle.
     types : list, shape=(1,n_particles), dtype=str
         List of type names of all particles in the system.
     masses : list, shape=(1,n_particles), dtype=float
@@ -81,10 +80,10 @@ class System(object):
     """
     def __init__(self, xml_file=None, identify_molecules=True, ignore_zero_bond_order=False):
         
-        self._xyz = np.array([])
+        self._xyz = []
         self._n_particles = 0
         self._types = []
-        self._bond_order = np.array([])
+        self._bond_order = []
         
         self._molecules = []
         self._unique_molecules = {}
@@ -132,7 +131,7 @@ class System(object):
         agg_array = []
         entry_temp = temp_text.split()
         for i in range(0, len(entry_temp)):
-            agg_array.append(float(entry_temp))
+            agg_array.append(float(entry_temp[i]))
         return agg_array
 
 
@@ -144,7 +143,7 @@ class System(object):
         
         # parse box information
         box_element = self._config.find('box')
-        self._box = [box_element.attrib['Lx'], box_element.attrib['Ly'], box_element.attrib['Lz']]
+        self._box = [float(box_element.attrib['Lx']), float(box_element.attrib['Ly']), float(box_element.attrib['Lz'])]
         
         # parse position data
         pos_element = self._config.find('position')
@@ -155,9 +154,8 @@ class System(object):
         xyz_temp = []
         for i in range(0, len(pos_temp), 3):
             temp_array = [float(pos_temp[i]), float(pos_temp[i+1]), float(pos_temp[i+2])]
-            xyz_temp.append(temp_array)
+            self._xyz.append(temp_array)
         
-        self._xyz = np.array(xyz_temp)
         
         # parse types
         type_element = self._config.find('type')
@@ -165,10 +163,10 @@ class System(object):
         self._types = type_text.split()
 
         # parse mass
-        self._masses = _parse_floats(element='mass')
+        self._masses = self._parse_floats(element='mass')
     
         # parse charge
-        self._charges = _parse_floats(element='charge')
+        self._charges = self._parse_floats(element='charge')
 
         # parse topological info
         self._bonds = self._parse_topology(element='bond', length=3)
@@ -176,8 +174,9 @@ class System(object):
         self._dihedrals = self._parse_topology(element='dihedral', length=5)
     
         # calculate bond_order
-        
-        self._bond_order = np.zeros(self._n_particles)
+        for i in range(0, self.n_particles):
+            self._bond_order.append(0)
+            
         for bond in self._bonds:
             i = bond[1]
             j = bond[2]
