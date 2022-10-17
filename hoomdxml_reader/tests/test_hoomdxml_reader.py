@@ -15,7 +15,7 @@ def test_hoomdxml_reader_imported():
     assert "hoomdxml_reader" in sys.modules
     
 def test_loader():
-    system = hxml.System("example.hoomdxml")
+    system = hxml.System("hoomdxml_reader/tests/example.hoomdxml")
     
     assert len(system.box) == 3
     assert system.box == [10.0, 11.0, 12.0]
