@@ -8,6 +8,7 @@ import os
 import pytest
 
 import hoomdxml_reader as hxml
+from hoomdxml_reader.molecule import Molecule
 
 
 def test_hoomdxml_reader_imported():
@@ -18,6 +19,9 @@ def test_loader():
     cwd = os.getcwd()
     print(cwd)
     system = hxml.System(cwd + "/hoomdxml_reader/tests/example.hoomdxml")
+    
+    assert system.identify_molecules == True
+    assert system.ignore_zero_bond_order == False
     
     assert len(system.box) == 3
     assert system.box == [10.0, 11.0, 12.0]
@@ -56,6 +60,10 @@ def test_loader():
     
     # test ignoring particles with zero bond order
     system = hxml.System(cwd + "/hoomdxml_reader/tests/example.hoomdxml", ignore_zero_bond_order=True)
+    
+    assert system.identify_molecules == True
+    assert system.ignore_zero_bond_order == True
+    
     assert len(system.molecules) == 1
     assert len(system.unique_molecules) == 1
     
@@ -68,11 +76,16 @@ def test_loader():
     assert system.molecules[0].pattern == 'CH3CH2CH2CH2CH3'
     assert len(system.molecules[0].types) == 5
     assert len(system.molecules[0].particles) == 5
+    assert system.molecules[0].n_particles == 5
     assert system.molecules[0].particles == [0, 1, 2, 3, 4]
     assert system.molecules[0].types  == ['CH3', 'CH2', 'CH2', 'CH2', 'CH3']
     
     #test ignoring identify molecules
     system = hxml.System(cwd + "/hoomdxml_reader/tests/example.hoomdxml", identify_molecules=False)
+    
+    assert system.identify_molecules == False
+    assert system.ignore_zero_bond_order == False
+    
     assert len(system.molecules) == 0
     assert len(system.unique_molecules) == 0
 
@@ -95,7 +108,32 @@ def test_rename_molecules():
     assert system.molecules[0].name == 'pentane'
     
 
-
+def test_Molecule_class():
+    molecule = Molecule()
     
+    assert len(molecule.particles) == 0
+    assert len(molecule.types) == 0
+    assert molecule.pattern == ''
+    assert molecule.name == 'none'
+    assert molecule.n_particles == 0
+
+    molecule.add_particle(0,'test1')
+    assert len(molecule.particles) == 1
+    assert len(molecule.types) == 1
+    assert molecule.types == ['test1']
+    assert molecule.pattern == 'test1'
+    assert molecule.n_particles == 1
+
+    molecule.add_particle(1,'test2')
+    molecule.set_molecule_name('test_molecule')
+
+    assert len(molecule.particles) == 2
+    assert len(molecule.types) == 2
+    assert molecule.types == ['test1', 'test2']
+    assert molecule.pattern == 'test1test2'
+    assert molecule.n_particles == 2
+    assert molecule.name == 'test_molecule'
+
+
     
 
