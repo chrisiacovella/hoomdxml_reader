@@ -4,7 +4,7 @@ Unit and regression test for the hoomdxml_reader package.
 
 # Import package, test suite, and other packages as needed
 import sys
-
+import os
 import pytest
 
 import hoomdxml_reader as hxml
@@ -15,7 +15,9 @@ def test_hoomdxml_reader_imported():
     assert "hoomdxml_reader" in sys.modules
     
 def test_loader():
-    system = hxml.System("hoomdxml_reader/tests/example.hoomdxml")
+    cwd = os.getcwd()
+    print(cwd)
+    system = hxml.System(cwd + "/hoomdxml_reader/tests/example.hoomdxml")
     
     assert len(system.box) == 3
     assert system.box == [10.0, 11.0, 12.0]
@@ -53,7 +55,7 @@ def test_loader():
     assert 'CH3CH2CH2CH2CH3' in system.unique_molecules
     
     # test ignoring particles with zero bond order
-    system = hxml.System("example.hoomdxml", ignore_zero_bond_order=True)
+    system = hxml.System(cwd + "/hoomdxml_reader/tests/example.hoomdxml", ignore_zero_bond_order=True)
     assert len(system.molecules) == 1
     assert len(system.unique_molecules) == 1
     
@@ -70,14 +72,16 @@ def test_loader():
     assert system.molecules[0].types  == ['CH3', 'CH2', 'CH2', 'CH2', 'CH3']
     
     #test ignoring identify molecules
-    system = hxml.System("example.hoomdxml", identify_molecules=False)
+    system = hxml.System(cwd + "/hoomdxml_reader/tests/example.hoomdxml", identify_molecules=False)
     assert len(system.molecules) == 0
     assert len(system.unique_molecules) == 0
 
 def test_rename_molecules():
+    cwd = os.getcwd()
+
     molecule_dict = {'CH3CH2CH2CH2CH3': 'pentane', 'water': 'SOL'}
     
-    system = hxml.System("example.hoomdxml")
+    system = hxml.System(cwd + "/hoomdxml_reader/tests/example.hoomdxml")
     system.set_molecule_name_by_dictionary(molecule_dict)
     
     assert system.unique_molecules['water'] == 'SOL'
@@ -85,7 +89,7 @@ def test_rename_molecules():
         
     # ignore the zero bond order water molecules to directly check to ensure
     # the name in the Molecule class has been properly modified.
-    system = hxml.System("example.hoomdxml", ignore_zero_bond_order=True)
+    system = hxml.System(cwd + "/hoomdxml_reader/tests/example.hoomdxml", ignore_zero_bond_order=True)
     system.set_molecule_name_by_dictionary(molecule_dict)
 
     assert system.molecules[0].name == 'pentane'
