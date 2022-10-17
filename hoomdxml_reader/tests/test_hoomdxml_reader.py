@@ -20,8 +20,8 @@ def test_loader():
     print(cwd)
     system = hxml.System(cwd + "/hoomdxml_reader/tests/example.hoomdxml")
     
-    assert system.identify_molecules == True
-    assert system.ignore_zero_bond_order == False
+    assert system._identify_molecules == True
+    assert system._ignore_zero_bond_order == False
     
     assert len(system.box) == 3
     assert system.box == [10.0, 11.0, 12.0]
@@ -61,8 +61,8 @@ def test_loader():
     # test ignoring particles with zero bond order
     system = hxml.System(cwd + "/hoomdxml_reader/tests/example.hoomdxml", ignore_zero_bond_order=True)
     
-    assert system.identify_molecules == True
-    assert system.ignore_zero_bond_order == True
+    assert system._identify_molecules == True
+    assert system._ignore_zero_bond_order == True
     
     assert len(system.molecules) == 1
     assert len(system.unique_molecules) == 1
@@ -83,8 +83,8 @@ def test_loader():
     #test ignoring identify molecules
     system = hxml.System(cwd + "/hoomdxml_reader/tests/example.hoomdxml", identify_molecules=False)
     
-    assert system.identify_molecules == False
-    assert system.ignore_zero_bond_order == False
+    assert system._identify_molecules == False
+    assert system._ignore_zero_bond_order == False
     
     assert len(system.molecules) == 0
     assert len(system.unique_molecules) == 0
