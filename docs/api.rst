@@ -4,4 +4,9 @@ API Documentation
 .. autosummary::
    :toctree: autosummary
 
-   hoomdxml_reader.canvas
+.. autoclass:: hoomdxml_reader.molecule.Molecule
+    :members:
+
+.. autoclass:: hoomdxml_reader.System
+    :members:
+    
