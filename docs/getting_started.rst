@@ -4,7 +4,7 @@ Installation
 installation instructions
 
 
-HOOMD-Blue XML file format:
+HOOMD-Blue XML file format
 ===========================
 An example of the basic file format is below:
 
@@ -79,10 +79,10 @@ An example of the basic file format is below:
         </configuration>
     </hoomd_xml>
 
-Usage:
+Usage
 ============
 
-Basic usage:
+Basic usage
 ------------
 To load a HOOMD-blue XML file, we need only pass the file path to the constructor.
 .. code:: ipython3

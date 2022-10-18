@@ -11,7 +11,6 @@ import xml.etree.ElementTree as ET
 from hoomdxml_reader.molecule import Molecule
 from warnings import warn
 
-
 class System(object):
     """
     System class.
@@ -96,7 +95,8 @@ class System(object):
             self._load_xml()
             if self._identify_molecules == True:
                 self._infer_molecules()
-       
+    
+    # essentially the same workflow as the constructor
     def load(self, xml_file=None, identify_molecules=True, ignore_zero_bond_order=False):
     
         self._identify_molecules = identify_molecules
@@ -125,6 +125,7 @@ class System(object):
             agg_array.append(temp_array)
         return agg_array
     
+    # a generic function to parse a list of floats defined in the text between opening/closing tags for a given element
     def _parse_floats(self, element):
         temp_element = self._config.find(element)
         temp_text = temp_element.text
@@ -135,7 +136,7 @@ class System(object):
         return agg_array
 
 
-    
+    # main function to load and parse the XML
     def _load_xml(self):
         self._tree = ET.parse(self._xml_file)
         self._root = self._tree.getroot()
@@ -183,6 +184,7 @@ class System(object):
             self._bond_order[i] += 1
             self._bond_order[j] += 1
             
+    # use networkx to create a graph, then look for which components are connected
     def _infer_molecules(self):
         self._graph = nx.Graph()
         for bond in self._bonds:
@@ -218,6 +220,9 @@ class System(object):
         for molecule in self._molecules:
              molecule.set_molecule_name(self._unique_molecules[molecule.pattern])
              
+    # reads in a dictionary that includes the molecule pattern as a key with the user defined name as the associated value,
+    # and re-assigns names of each molecule found for that pattern.
+    
     def set_molecule_name_by_dictionary(self, molecule_dict):
         for mol_name in molecule_dict:
             self._unique_molecules[mol_name] = molecule_dict[mol_name]
@@ -226,70 +231,70 @@ class System(object):
              molecule.set_molecule_name(self._unique_molecules[molecule.pattern])
     @property
     def xyz(self):
-        """xyz coordinates """
+        """A list of xyz coordinates for each particle, as defined in the source file."""
         return self._xyz
     
     @property
     def types(self):
-        """system types"""
+        """A list of all particle types defined in the source file."""
         return self._types
  
     @property
     def masses(self):
-        """system masses"""
+        """A list of all masses defined in the source file."""
         return self._masses
         
     @property
     def charges(self):
-        """system charges"""
+        """A list of all charges defined in the source file."""
         return self._charges
         
     @property
     def bonds(self):
-        """system bonds"""
+        """A list of all bonds defined in the source file."""
         return self._bonds
 
     @property
     def angles(self):
-        """system angles"""
+        """A list of all angles defined in the source file."""
         return self._angles
    
     @property
     def dihedrals(self):
-        """system dihedrals"""
+        """A list of all dihedrals defined in the source file"""
         return self._dihedrals
         
     @property
     def molecules(self):
-        """system molecule information"""
+        """This is a list of all molecules found in the system, where each entry corresponds to an instance of the Molecule class."""
         return self._molecules
 
     @property
     def unique_molecules(self):
-        """unique molecules in the system"""
+        """A dict that contains the molecule pattern as the key and associated molecule name as the value, for each unique molecule in the system. """
         return self._unique_molecules
 
     @property
     def graph(self):
-        """graph representing all bonds in the system"""
+        """A networkx graph generated from the bond information included in the source file."""
         return self._graph
         
     @property
     def bond_order(self):
-        """bond order of each particle in the system"""
+        """A list containing an integer bond order (i.e., total number of bonds) of each particle in the system"""
         return self._bond_order
 
     @property
     def n_particles(self):
-        """number of particles in the box"""
+        """The total number of particles found in the XML file"""
         return self._n_particles
     
     @property
     def box(self):
-        """box dimensions"""
+        """List of the box length in order Lx, Ly, Lz. Boxes are assumed to be centered a the origin."""
         return self._box
         
-
+            
 """
 if __name__ == "__main__":
     print(canvas())
