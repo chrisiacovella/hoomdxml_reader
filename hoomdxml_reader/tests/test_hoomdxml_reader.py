@@ -202,4 +202,4 @@ def test_mBuild_conversion():
     assert list(mb_system['molecule'][2]['particle'][0].pos) == [0.5, 0.5, 2.0]
     assert list(mb_system['molecule'][3]['particle'][0].pos) == [3.0, 1.0, 3.0]
     assert list(mb_system['molecule'][4]['particle'][0].pos) == [2.5, 0.0, 1.0]
-    assert list(mb_system['molecule'][4]['particle'][0].pos) == [0.0, 2.0, 4.0]
+    assert list(mb_system['molecule'][5]['particle'][0].pos) == [0.0, 2.0, 4.0]
