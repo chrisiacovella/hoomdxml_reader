@@ -12,7 +12,6 @@ from hoomdxml_reader.molecule import Molecule
 import hoomdxml_reader.convert as convert
 
 
-import mbuild as mb
 
 def test_hoomdxml_reader_imported():
     """Sample test, will always pass so long as import statement worked."""
@@ -138,6 +137,8 @@ def test_Molecule_class():
     assert molecule.name == 'test_molecule'
 
 @pytest.mark.skipif(sys.platform == 'win32', reason="mbuild CI is failing on windows for an unknown reason.")
+import mbuild as mb
+
 def test_mBuild_conversion():
     cwd = os.getcwd()
 
