@@ -9,6 +9,8 @@ import pytest
 
 import hoomdxml_reader as hxml
 from hoomdxml_reader.molecule import Molecule
+import hoomdxml_reader.convert as convert
+
 
 import mbuild as mb
 
