@@ -19,13 +19,13 @@ Other relevant links:
 
 Check out the source from the github repository:
 
-    $ git clone https://github.com/chrisiacovella/hoomdxml_reader.git``
+    $ git clone https://github.com/chrisiacovella/hoomdxml_reader.git
 
 In the top level of hoomdxml_reader directory, use pip to install:
 
-    $ pip install -e .``
+    $ pip install -e .
 
-The core functions of the module will require networkx to be installed.
+The core functions of the module will require ``networkx`` to be installed.
 To create an environment named hoomdxml_reader with this necessary package,
 run the following from the top level of the  hoomdxml_reader directory.
 
@@ -33,11 +33,11 @@ run the following from the top level of the  hoomdxml_reader directory.
 
 Optional packages
 ----------------
-While not necessary to use the core functions of the Module, conversion to an mBuild ``Compound``, requires `mbuild <https://mbuild.mosdef.org/en/stable/getting_started/installation/installation.html>`_ to be installed.
+While not necessary to use the core functions of the Module, conversion to an mBuild ``Compound``, requires [mbuild](https://mbuild.mosdef.org/en/stable/getting_started/installation/installation.html) to be installed.
 
     $ conda install -c conda-forge mbuild
 
-To visualize mbuild ``Compounds`` in Jupyter notebooks, install `py3dmol <http://3dmol.csb.pitt.edu>`_:
+To visualize mbuild ``Compounds`` in Jupyter notebooks, install [py3dmol](http://3dmol.csb.pitt.edu):
 
     $ conda install -c conda-forge py3dmol
 git push origin HEAD:
