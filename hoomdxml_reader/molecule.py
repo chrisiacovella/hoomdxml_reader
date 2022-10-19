@@ -1,5 +1,4 @@
 """hoomdxml_reader Molecule class """
-import json
 
 __all__ = ['Molecule']
 
