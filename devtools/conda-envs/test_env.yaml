@@ -9,6 +9,7 @@ dependencies:
   - python
   - pip
   - networkx
+  - mbuild
 
     # Testing
   - pytest

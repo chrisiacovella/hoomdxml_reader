@@ -9,6 +9,9 @@ import pytest
 
 import hoomdxml_reader as hxml
 from hoomdxml_reader.molecule import Molecule
+import hoomdxml_reader.convert as convert
+import mbuild as mb
+
 
 
 def test_hoomdxml_reader_imported():
@@ -134,6 +137,69 @@ def test_Molecule_class():
     assert molecule.n_particles == 2
     assert molecule.name == 'test_molecule'
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="mbuild CI is failing on windows for an unknown reason.")
+def test_mBuild_conversion():
+    cwd = os.getcwd()
 
+    molecule_dict = {'CH3CH2CH2CH2CH3': 'pentane', 'water': 'SOL'}
     
+    system = hxml.System(cwd + "/hoomdxml_reader/tests/example.hoomdxml")
+    system.set_molecule_name_by_dictionary(molecule_dict)
+    
+    mb_system = convert.System_to_Compound(system)
+    
+    assert len(mb_system['molecule']) == 6
+    assert len(mb_system['molecule'][0]['particle']) == 5
+    assert len(mb_system['molecule'][1]['particle']) == 1
+    
+    assert mb_system['molecule'][0].name == 'pentane'
+    assert mb_system['molecule'][1].name == 'SOL'
+    assert mb_system['molecule'][2].name == 'SOL'
+    assert mb_system['molecule'][3].name == 'SOL'
+    assert mb_system['molecule'][4].name == 'SOL'
+    assert mb_system['molecule'][5].name == 'SOL'
 
+    assert mb_system['molecule'][0].n_bonds == 4
+    assert mb_system['molecule'][1].n_bonds == 0
+    assert mb_system['molecule'][2].n_bonds == 0
+    assert mb_system['molecule'][3].n_bonds == 0
+    assert mb_system['molecule'][4].n_bonds == 0
+    assert mb_system['molecule'][5].n_bonds == 0
+    
+    assert mb_system['molecule'][0]['particle'][0].n_direct_bonds == 1
+    assert mb_system['molecule'][0]['particle'][1].n_direct_bonds == 2
+    assert mb_system['molecule'][0]['particle'][2].n_direct_bonds == 2
+    assert mb_system['molecule'][0]['particle'][3].n_direct_bonds == 2
+    assert mb_system['molecule'][0]['particle'][4].n_direct_bonds == 1
+
+    assert mb_system['molecule'][1]['particle'][0].n_direct_bonds == 0
+    assert mb_system['molecule'][2]['particle'][0].n_direct_bonds == 0
+    assert mb_system['molecule'][3]['particle'][0].n_direct_bonds == 0
+    assert mb_system['molecule'][4]['particle'][0].n_direct_bonds == 0
+    assert mb_system['molecule'][5]['particle'][0].n_direct_bonds == 0
+
+
+    assert mb_system['molecule'][0]['particle'][0].name == 'CH3'
+    assert mb_system['molecule'][0]['particle'][1].name == 'CH2'
+    assert mb_system['molecule'][0]['particle'][2].name == 'CH2'
+    assert mb_system['molecule'][0]['particle'][3].name == 'CH2'
+    assert mb_system['molecule'][0]['particle'][4].name == 'CH3'
+
+    assert mb_system['molecule'][1]['particle'][0].name == 'water'
+    assert mb_system['molecule'][2]['particle'][0].name == 'water'
+    assert mb_system['molecule'][3]['particle'][0].name == 'water'
+    assert mb_system['molecule'][4]['particle'][0].name == 'water'
+    assert mb_system['molecule'][5]['particle'][0].name == 'water'
+
+
+    assert list(mb_system['molecule'][0]['particle'][0].pos) == [0.0, 0.0, 0.0]
+    assert list(mb_system['molecule'][0]['particle'][1].pos) == [0.5, 0.0, 0.0]
+    assert list(mb_system['molecule'][0]['particle'][2].pos) == [1.0, 0.0, 0.0]
+    assert list(mb_system['molecule'][0]['particle'][3].pos) == [1.5, 0.0, 0.0]
+    assert list(mb_system['molecule'][0]['particle'][4].pos) == [2.0, 0.0, 0.0]
+    
+    assert list(mb_system['molecule'][1]['particle'][0].pos) == [0.0, 1.0, 0.0]
+    assert list(mb_system['molecule'][2]['particle'][0].pos) == [0.5, 0.5, 2.0]
+    assert list(mb_system['molecule'][3]['particle'][0].pos) == [3.0, 1.0, 3.0]
+    assert list(mb_system['molecule'][4]['particle'][0].pos) == [2.5, 0.0, 1.0]
+    assert list(mb_system['molecule'][5]['particle'][0].pos) == [0.0, 2.0, 4.0]

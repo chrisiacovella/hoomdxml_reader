@@ -47,26 +47,27 @@ class Molecule(object):
 
     @property
     def particles(self):
-        """List of indices of particles in the molecule in numerical order"""
+        """A list of indices correspoding to the particles in the molecule. These are listed in numerical order from lowest to highest."""
         return self._particles
         
     @property
     def types(self):
-        """List containing the type of particle in the particles list"""
+        """A list containing the type of the particle stores in the particles list, listed in the same order."""
         return self._types
 
     @property
     def pattern(self):
-        """String constructed by concatenating entries in types.
+        """Returns a string constructed by concatenating entries in the types list.
         This is used to identify the total number of unique molecules in a system."""
         return self._pattern
 
     @property
     def name(self):
-        """Name of the molecule """
+        """A string corresponding to the name of the molecule. Note, molecules with the same pattern will be assigned the same name."""
         return self._name
         
     @property
     def n_particles(self):
-        """Number of particles in the molecule """
+        """The total number of particles in the molecule."""
         return len(self._particles)
+
