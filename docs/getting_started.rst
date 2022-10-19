@@ -5,18 +5,18 @@ pip install
 -----------
 Check out the source from the github repository:
 
-    $ git clone https://github.com/chrisiacovella/hoomdxml_reader.git``
+    $ git clone https://github.com/chrisiacovella/hoomdxml_reader.git
 
 In the top level of hoomdxml_reader directory, use pip to install:
 
-    $ pip install -e .``
+    $ pip install -e .
 
 The core functions of the module will require networkx to be installed.
 To create an environment named hoomdxml_reader with this necessary package,
 run the following from the top level of the  hoomdxml_reader directory.
 
 
-    $ conda env create -f environment.yml``
+    $ conda env create -f environment.yml
 
 Optional packages
 ----------------
