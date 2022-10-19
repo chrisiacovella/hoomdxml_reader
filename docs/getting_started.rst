@@ -1,9 +1,43 @@
 Installation
 ===============
 
-installation instructions
+pip install
+-----------
+Check out the source from the github repository:
+
+    $ git clone https://github.com/chrisiacovella/hoomdxml_reader.git``
+
+In the top level of hoomdxml_reader directory, use pip to install:
+
+    $ pip install -e .``
+
+The core functions of the module will require networkx to be installed.
+To create an environment named hoomdxml_reader with this necessary package,
+run the following from the top level of the  hoomdxml_reader directory.
 
 
+    $ conda env create -f environment.yml``
+
+Optional packages
+----------------
+While not necessary to use the core functions of the Module, conversion to an mBuild ``Compound``, requires `mbuild <https://mbuild.mosdef.org/en/stable/getting_started/installation/installation.html>`_ to be installed.
+
+    $ conda install -c conda-forge mbuild
+
+To visualize mbuild ``Compounds`` in Jupyter notebooks, install `py3dmol <http://3dmol.csb.pitt.edu>`_:
+
+    $ conda install -c conda-forge py3dmol
+    
+Building the documentation
+--------------------------
+
+This packag uses `sphinx <https://www.sphinx-doc.org/en/master/index.html>`_ to build its documentation. To build the docs locally, run the following while in the ``docs`` directory::
+
+    $ pip install -r requirements.yaml
+    $ make html
+
+To view documentation, open ``$INSTALL_PATH/hoomdxml_reader/docs/_build/html/index.html`` in your web browser.
+    
 HOOMD-Blue XML file format
 ===========================
 An example of the basic file format is below:
