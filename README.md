@@ -29,7 +29,7 @@ The core functions of the module will require ``networkx`` to be installed.
 To create an environment named hoomdxml_reader with this necessary package,
 run the following from the top level of the  hoomdxml_reader directory.
 
-    $ conda env create -f environment.yml``
+    $ conda env create -f environment.yml
 
 Optional packages
 ----------------
