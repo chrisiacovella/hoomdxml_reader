@@ -148,31 +148,23 @@ For example, the total number of particles in the system:
 
     10
 
-Particle positions as a numpy array:
+Particle positions are stored in a list where, e.g., the following would print the xyz coordinates of the first particle in the list:
 
 .. code:: ipython3
 
-    print(system.xyz)
+    print(system.xyz[0])
 
 *output*:
 
 .. code:: ipython3
 
-    [[0.  0.  0. ]
-     [0.5 0.  0. ]
-     [1.  0.  0. ]
-     [1.5 0.  0. ]
-     [2.  0.  0. ]
-     [0.  1.  0. ]
-     [0.5 0.5 2. ]
-     [3.  1.  3. ]
-     [2.5 0.  1. ]
-     [0.  2.  4. ]]
+    [0.0, 0.0, 0.0]
 
 Other calls that correspond to each section in the XML data file shown above:
  
 .. code:: ipython3
 
+    system.types
     system.bonds
     system.angles
     system.dihedrals
