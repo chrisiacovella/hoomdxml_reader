@@ -61,6 +61,10 @@ class System(object):
         List of all dihedrals in the system.  The first entry per dihedral is the
         name of the dihedral (str) as defined in the xml file,
         followed by indices for each particle in the dihedral.
+    impropers : list, shape=(5, n_particles), dtype=(str, int, int, int, int)
+        List of all impropers in the system.  The first entry per improper is the
+        name of the improper (str) as defined in the xml file,
+        followed by indices for each particle in the impropers.
     molecules : list, dtype=Molecule
         List containing each molecule identified by the code. Each entry
         in the list is an instance of the Molecule class.
@@ -173,7 +177,8 @@ class System(object):
         self._bonds = self._parse_topology(element='bond', length=3)
         self._angles = self._parse_topology(element='angle', length=4)
         self._dihedrals = self._parse_topology(element='dihedral', length=5)
-    
+        self._impropers = self._parse_topology(element='improper', length=5)
+
         # calculate bond_order
         for i in range(0, self.n_particles):
             self._bond_order.append(0)
@@ -197,7 +202,9 @@ class System(object):
             
             for item in temp:
                 mol_temp.add_particle(item, self._types[item])
-                
+            for edge in self._graph.subgraph(c).edges:
+                mol_temp.add_bond(list(edge))
+            
             self._molecules.append(mol_temp)
             
         if self._ignore_zero_bond_order == False:
@@ -263,7 +270,12 @@ class System(object):
     def dihedrals(self):
         """A list of all dihedrals defined in the source file"""
         return self._dihedrals
-        
+
+    @property
+    def impropers(self):
+        """A list of all dihedrals defined in the source file"""
+        return self._impropers
+
     @property
     def molecules(self):
         """This is a list of all molecules found in the system, where each entry corresponds to an instance of the Molecule class."""

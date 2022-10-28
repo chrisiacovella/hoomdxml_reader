@@ -1,5 +1,6 @@
 """hoomdxml_reader Conversion functions """
 import mbuild as mb
+from warnings import warn
 
 __all__ = ['Convert']
 
@@ -24,9 +25,17 @@ class Molecule_to_Compound(mb.Compound):
     """
     def __init__(self, system, molecule, name):
         super(Molecule_to_Compound, self).__init__(name=name)
+        
+        relative_indices = {}
         for i, particle in enumerate(molecule.particles):
             temp_particle = mb.Particle(name=molecule.types[i], pos=system.xyz[particle], charge=system.charges[particle], mass=system.masses[particle])
             self.add(temp_particle, label='particle[$]')
+            relative_indices[particle] = i
+            
+        for bond_temp in molecule.bonds:
+            i =relative_indices[bond_temp[0]]
+            j = relative_indices[bond_temp[1]]
+            self.add_bond((self[i],self[j]))
 
 
 class System_to_Compound(mb.Compound):
@@ -44,13 +53,26 @@ class System_to_Compound(mb.Compound):
     Parameters
     ----------
         system : instance of the hoomdxml_reader System class
+        name_selection : (optional) a list of strings corresponding to
+                         the names of molecules that will be converted to
+                         mBuild compounds.
     """
-    def __init__(self, system):
+    def __init__(self, system, name_selection=None):
         super(System_to_Compound, self).__init__()
         
-        for molecule in system.molecules:
-            temp_molecule = Molecule_to_Compound(system, molecule, name=molecule.name)
-            self.add(temp_molecule, label='molecule[$]')
+        
+        if name_selection == None:
+            for molecule in system.molecules:
+                temp_molecule = Molecule_to_Compound(system, molecule, name=molecule.name)
+                self.add(temp_molecule, label='molecule[$]')
+        else:
+            count = 0
+            for molecule in system.molecules:
+                if molecule.name in name_selection:
+                    temp_molecule = Molecule_to_Compound(system, molecule, name=molecule.name)
+                    self.add(temp_molecule, label='molecule[$]')
+                    count += 1
+            if count == 0:
+                warn("Zero particles have been converted. Check the selection")
+
             
-        for bond in system.bonds:
-            self.add_bond( (self[bond[1]], self[bond[2]]) )
