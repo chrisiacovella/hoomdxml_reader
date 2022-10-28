@@ -47,7 +47,10 @@ def test_loader():
     
     assert len(system.dihedrals) == 2
     assert system.dihedrals == [['CH3-CH2-CH2-CH2', 0, 1, 2, 3], ['CH2-CH2-CH2-CH3', 1, 2, 3, 4]]
-    
+ 
+    assert len(system.impropers) == 2
+    assert system.impropers == [['CH3-CH2-CH2-CH2', 0, 1, 2, 3], ['CH2-CH2-CH2-CH3', 1, 2, 3, 4]]
+
     assert len(system.masses) == 10
     assert system.masses == [15.0, 14.0, 14.0, 14.0, 15.0, 18.0, 18.0, 18.0, 18.0, 18.0]
 
@@ -148,6 +151,8 @@ def test_mBuild_conversion():
     
     mb_system = convert.System_to_Compound(system)
     
+    assert mb_system.n_particles == 10
+
     assert len(mb_system['molecule']) == 6
     assert len(mb_system['molecule'][0]['particle']) == 5
     assert len(mb_system['molecule'][1]['particle']) == 1
@@ -203,3 +208,40 @@ def test_mBuild_conversion():
     assert list(mb_system['molecule'][3]['particle'][0].pos) == [3.0, 1.0, 3.0]
     assert list(mb_system['molecule'][4]['particle'][0].pos) == [2.5, 0.0, 1.0]
     assert list(mb_system['molecule'][5]['particle'][0].pos) == [0.0, 2.0, 4.0]
+
+    mb_system_pentane = convert.System_to_Compound(system, name_selection=['pentane'])
+    assert mb_system_pentane.n_particles == 5
+    assert mb_system_pentane['molecule'][0].name == 'pentane'
+    
+    assert list(mb_system_pentane['molecule'][0]['particle'][0].pos) == [0.0, 0.0, 0.0]
+    assert list(mb_system_pentane['molecule'][0]['particle'][1].pos) == [0.5, 0.0, 0.0]
+    assert list(mb_system_pentane['molecule'][0]['particle'][2].pos) == [1.0, 0.0, 0.0]
+    assert list(mb_system_pentane['molecule'][0]['particle'][3].pos) == [1.5, 0.0, 0.0]
+    assert list(mb_system_pentane['molecule'][0]['particle'][4].pos) == [2.0, 0.0, 0.0]
+    
+    assert mb_system_pentane['molecule'][0]['particle'][0].n_direct_bonds == 1
+    assert mb_system_pentane['molecule'][0]['particle'][1].n_direct_bonds == 2
+    assert mb_system_pentane['molecule'][0]['particle'][2].n_direct_bonds == 2
+    assert mb_system_pentane['molecule'][0]['particle'][3].n_direct_bonds == 2
+    assert mb_system_pentane['molecule'][0]['particle'][4].n_direct_bonds == 1
+    
+    
+    mb_system_sol = convert.System_to_Compound(system, name_selection=['SOL'])
+    assert mb_system_sol.n_particles == 5
+    assert mb_system_sol['molecule'][0].name == 'SOL'
+    assert mb_system_sol['molecule'][1].name == 'SOL'
+    assert mb_system_sol['molecule'][2].name == 'SOL'
+    assert mb_system_sol['molecule'][3].name == 'SOL'
+    assert mb_system_sol['molecule'][4].name == 'SOL'
+
+    assert list(mb_system_sol['molecule'][0]['particle'][0].pos) == [0.0, 1.0, 0.0]
+    assert list(mb_system_sol['molecule'][1]['particle'][0].pos) == [0.5, 0.5, 2.0]
+    assert list(mb_system_sol['molecule'][2]['particle'][0].pos) == [3.0, 1.0, 3.0]
+    assert list(mb_system_sol['molecule'][3]['particle'][0].pos) == [2.5, 0.0, 1.0]
+    assert list(mb_system_sol['molecule'][4]['particle'][0].pos) == [0.0, 2.0, 4.0]
+
+    assert mb_system_sol['molecule'][0]['particle'][0].n_direct_bonds == 0
+    assert mb_system_sol['molecule'][1]['particle'][0].n_direct_bonds == 0
+    assert mb_system_sol['molecule'][2]['particle'][0].n_direct_bonds == 0
+    assert mb_system_sol['molecule'][3]['particle'][0].n_direct_bonds == 0
+    assert mb_system_sol['molecule'][4]['particle'][0].n_direct_bonds == 0

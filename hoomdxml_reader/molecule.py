@@ -34,6 +34,7 @@ class Molecule(object):
     def __init__(self):
         self._particles = []
         self._types = []
+        self._bonds = []
         self._pattern = ''
         self._name = 'none'
     
@@ -44,16 +45,24 @@ class Molecule(object):
         
     def set_molecule_name(self, molecule_name):
         self._name = molecule_name
+        
+    def add_bond(self, bond):
+        self._bonds.append(bond)
 
     @property
     def particles(self):
-        """A list of indices correspoding to the particles in the molecule. These are listed in numerical order from lowest to highest."""
+        """A list of indices correspoding to the particles in the molecule. These are listed in numerical order from lowest to highest. These correspond to the numbers assigned in the system class."""
         return self._particles
         
     @property
     def types(self):
         """A list containing the type of the particle stores in the particles list, listed in the same order."""
         return self._types
+
+    @property
+    def bonds(self):
+        """A list containing the bonds in the molecule. Integer particle ids refer to numbers in the entire system."""
+        return self._bonds
 
     @property
     def pattern(self):

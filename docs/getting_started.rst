@@ -19,7 +19,7 @@ run the following from the top level of the  hoomdxml_reader directory.
     $ conda env create -f environment.yml
 
 Optional packages
-----------------
+-----------------
 While not necessary to use the core functions of the Module, conversion to an mBuild ``Compound``, requires `mbuild <https://mbuild.mosdef.org/en/stable/getting_started/installation/installation.html>`_ to be installed.
 
     $ conda install -c conda-forge mbuild
@@ -168,6 +168,7 @@ Other calls that correspond to each section in the XML data file shown above:
     system.bonds
     system.angles
     system.dihedrals
+    system.impropers
     system.masses
     system.charges
     system.bond_order
@@ -188,7 +189,7 @@ The following code prints information related to each molecule.
 .. code:: ipython3
 
     for molecule in system.molecules:
-        print(molecule.name, molecule.particles, molecule.types, molecule.pattern)
+        print(molecule.name, molecule.particles, molecule.types, molecule.pattern, molecule.bonds)
  
  
 *output*:
@@ -286,7 +287,7 @@ If py3Dmol is installed in your environment the mb_system can be easily visualiz
 .. code:: ipython3
 
         mb_system.visualize()
-        
+  
 The following code snippets demonstrate how to access information within the mBuild ``Compound`` that we created. Again, the goal was to define the ``Compound`` in such a way that it mimics the hierarchy in the ``System`` class. To access individual molecules, we can use the following syntax show below; this is possible because each molecule that was added to the mBuild ``Compound`` was given a label with the following syntax 'molecule[$]'. E.g., to access the first and third molecules in the system:
 
 
@@ -368,3 +369,18 @@ Similar to molecules, particles in each molecule are added with the labels ``par
 
 .. note::
     mBuild Compounds will contain information about position, particle type (i.e. name), molecule name, mass, charge, and any bonds.  Angle and dihedral information is not included, nor are quantities calculated automatically in the System class, such as bond order.
+
+We can additionally restrict the conversion to specific unique molecules by passing a list of molecule names via the name_selection variable. For example, we can restrict our conversion to only the water molecules in the system:
+
+.. code:: ipython3
+
+    mb_system = convert.System_to_Compound(system, name_selection=['water'])
+
+An individual molecule in the System class can be converted to an mBuild Compound.  This function can be used if one desires to have increased customization of the conversion than is provided in the System_to_Compound function.
+
+.. code:: ipython3
+
+    mb_molecule = convert.Molecule_to_Compound(system, system.molecules[0],
+                                                name=system.molecules[0].name)
+                                                
+                                                

@@ -64,5 +64,9 @@
             CH3-CH2-CH2-CH2 0 1 2 3
             CH2-CH2-CH2-CH3 1 2 3 4
         </dihedral>
+        <improper>
+            CH3-CH2-CH2-CH2 0 1 2 3
+            CH2-CH2-CH2-CH3 1 2 3 4
+        </improper>
     </configuration>
 </hoomd_xml>
