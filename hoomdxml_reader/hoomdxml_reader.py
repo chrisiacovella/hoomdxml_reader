@@ -118,16 +118,17 @@ class System(object):
     # takes the element as an argument and  number of entries per line
     def _parse_topology(self, element, length):
         temp_element = self._config.find(element)
-        temp_text = temp_element.text
-        agg_array = []
-        entry_temp = temp_text.split()
-        for i in range(0, len(entry_temp), length):
-            temp_array = []
-            temp_array.append(entry_temp[i])
-            for j in range(1, length):
-                temp_array.append(int(entry_temp[i+j]))
-            agg_array.append(temp_array)
-        return agg_array
+        if temp_element is not None:
+            temp_text = temp_element.text
+            agg_array = []
+            entry_temp = temp_text.split()
+            for i in range(0, len(entry_temp), length):
+                temp_array = []
+                temp_array.append(entry_temp[i])
+                for j in range(1, length):
+                    temp_array.append(int(entry_temp[i+j]))
+                agg_array.append(temp_array)
+            return agg_array
     
     # a generic function to parse a list of floats defined in the text between opening/closing tags for a given element
     def _parse_floats(self, element):
