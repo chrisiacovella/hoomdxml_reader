@@ -49,19 +49,19 @@ class System(object):
         List of masses of all particles in the system.
     charges : list, shape=(1,n_particles), dtype=float
         List of charges of all particles in the system.
-    bonds : list, shape=(3, n_particles), dtype=(str, int, int)
+    bonds : list, shape=(3, n_bonds), dtype=(str, int, int)
         List of all bonds in the system.  The first entry per bond is the
         name of the bond (str) as defined in the xml file,
         followed by indices for each particle in the bond.
-    angles : list, shape=(4, n_particles), dtype=(str, int, int, int)
+    angles : list, shape=(4, n_angles), dtype=(str, int, int, int)
         List of all angles in the system.  The first entry per angle is the
         name of the angle (str) as defined in the xml file,
         followed by indices for each particle in the angle.
-    dihedrals : list, shape=(5, n_particles), dtype=(str, int, int, int, int)
+    dihedrals : list, shape=(5, n_dihedrals), dtype=(str, int, int, int, int)
         List of all dihedrals in the system.  The first entry per dihedral is the
         name of the dihedral (str) as defined in the xml file,
         followed by indices for each particle in the dihedral.
-    impropers : list, shape=(5, n_particles), dtype=(str, int, int, int, int)
+    impropers : list, shape=(5, n_impropers), dtype=(str, int, int, int, int)
         List of all impropers in the system.  The first entry per improper is the
         name of the improper (str) as defined in the xml file,
         followed by indices for each particle in the impropers.
@@ -83,6 +83,7 @@ class System(object):
     """
     def __init__(self, xml_file=None, identify_molecules=True, ignore_zero_bond_order=False):
         
+        self._xml_file = None
         self._xyz = []
         self._n_particles = 0
         self._types = []
@@ -113,7 +114,26 @@ class System(object):
             self._load_xml()
             if self._identify_molecules == True:
                 self._infer_molecules()
-
+                
+    def convert_mdtraj(self, mdtraj=None, frame=0, identify_molecules=True, ignore_zero_bond_order=False):
+        if mdtraj is None:
+            warn("mdtraj traj not defined")
+        else:
+            for xyz in mdtraj.xyz[frame]:
+                self._xyz.append(xyz)
+                self._n_particles = len(self.xyz)
+                
+            for atom in mdtraj.top.atoms:
+                self._types.append(atom)
+                
+            for bond in mdtraj.top.bonds:
+                temp_bond = [f'{bond.atom1}{bond.atom2}', bond.atom1.index, bond.atom2.index]
+                self._bonds.append(temp_bond)
+            
+            self._calc_bond_order()
+            if self._identify_molecules == True:
+                self._infer_molecules()
+    
     # generic function to parse the topology entries,
     # takes the element as an argument and  number of entries per line
     def _parse_topology(self, element, length):
@@ -140,7 +160,17 @@ class System(object):
             agg_array.append(float(entry_temp[i]))
         return agg_array
 
-
+    def _calc_bond_order(self):
+        # calculate bond_order
+        for i in range(0, self.n_particles):
+            self._bond_order.append(0)
+            
+        for bond in self._bonds:
+            i = bond[1]
+            j = bond[2]
+            self._bond_order[i] += 1
+            self._bond_order[j] += 1
+    
     # main function to load and parse the XML
     def _load_xml(self):
         self._tree = ET.parse(self._xml_file)
@@ -181,14 +211,7 @@ class System(object):
         self._impropers = self._parse_topology(element='improper', length=5)
 
         # calculate bond_order
-        for i in range(0, self.n_particles):
-            self._bond_order.append(0)
-            
-        for bond in self._bonds:
-            i = bond[1]
-            j = bond[2]
-            self._bond_order[i] += 1
-            self._bond_order[j] += 1
+        self._calc_bond_order()
             
     # use networkx to create a graph, then look for which components are connected
     def _infer_molecules(self):
