@@ -124,10 +124,11 @@ class System(object):
                 self._n_particles = len(self.xyz)
                 
             for atom in mdtraj.top.atoms:
-                self._types.append(atom)
-                
+                self._types.append(atom.name)
+            
+            self._bonds = []
             for bond in mdtraj.top.bonds:
-                temp_bond = [f'{bond.atom1}{bond.atom2}', bond.atom1.index, bond.atom2.index]
+                temp_bond = [f'{bond.atom1.name}{bond.atom2.name}', bond.atom1.index, bond.atom2.index]
                 self._bonds.append(temp_bond)
             
             self._calc_bond_order()
