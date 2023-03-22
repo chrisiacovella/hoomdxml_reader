@@ -118,7 +118,7 @@ Usage
 
 Basic usage
 ------------
-To load a HOOMD-blue XML file, we need only pass the file path to the constructor.
+To load a HOOMD-blue XML file or GSD file, we need only pass the file path to the constructor.
 .. code:: ipython3
 
     import hoomdxml_reader as hxml
@@ -251,6 +251,8 @@ If we re-run the query about each molecule we can see the names have been re-ass
     water [7] ['water'] water
     water [8] ['water'] water
     water [9] ['water'] water
+    
+If this information is known beforehand, the molecule dictionary can simply be passed to the constructor or load function.
 
 Converting to an mBuild Compound
 --------------------------------

@@ -6,6 +6,8 @@ Module for reading legacy hoomd XML formatted files.
 __all__ = ["System"]
 
 import networkx as nx
+import gsd.hoomd
+
 import xml.etree.ElementTree as ET
 
 from hoomdxml_reader.molecule import Molecule
@@ -13,29 +15,13 @@ from warnings import warn
 
 class System(object):
     """
-    System class.
+    Class that stores system information.
     
-    
-    A class to load hoomd XML formatted configuration files and store the
+    A class to load hoomd XML or GSD formatted configuration files and store the
     information encoded in these files. This class will also optionally
     goup the underlying particles into molecules, inferred based upon
     the connectivity of particles as defined in the bonds section of
-    the XML file.
-
-    Parameters
-    ----------
-        xml_file : string, default=None
-            Name of the hoomd xml file to load
-        identify_molecules : bool, default=True
-            If True, the code will group the particles based upon their underlying connectivity.
-            Particles bonded together will be considered a molecule
-        ignore_zero_bond_order : bool, default=False
-            If True, particles without any bonds (i.e., bond order = 0) will be ignored when
-            identifying molecules (i.e., they will not appear in the molecule list).
-            If False, a particle with bond order = 0 will be considered to be a molecule.
-        molecule_dict : dict, dtype=str
-            A dict that defines the molecule 'pattern' and associated user defined name.
-            This is used for renaming molecules automatically identified.
+    the configuration file.
             
     Returns
     -------
@@ -49,19 +35,19 @@ class System(object):
         List of masses of all particles in the system.
     charges : list, shape=(1,n_particles), dtype=float
         List of charges of all particles in the system.
-    bonds : list, shape=(3, n_particles), dtype=(str, int, int)
+    bonds : list, shape=(3, n_bonds), dtype=(str, int, int)
         List of all bonds in the system.  The first entry per bond is the
         name of the bond (str) as defined in the xml file,
         followed by indices for each particle in the bond.
-    angles : list, shape=(4, n_particles), dtype=(str, int, int, int)
+    angles : list, shape=(4, n_angles), dtype=(str, int, int, int)
         List of all angles in the system.  The first entry per angle is the
         name of the angle (str) as defined in the xml file,
         followed by indices for each particle in the angle.
-    dihedrals : list, shape=(5, n_particles), dtype=(str, int, int, int, int)
+    dihedrals : list, shape=(5, n_dihedrals), dtype=(str, int, int, int, int)
         List of all dihedrals in the system.  The first entry per dihedral is the
         name of the dihedral (str) as defined in the xml file,
         followed by indices for each particle in the dihedral.
-    impropers : list, shape=(5, n_particles), dtype=(str, int, int, int, int)
+    impropers : list, shape=(5, n_impropers), dtype=(str, int, int, int, int)
         List of all impropers in the system.  The first entry per improper is the
         name of the improper (str) as defined in the xml file,
         followed by indices for each particle in the impropers.
@@ -76,44 +62,152 @@ class System(object):
         NetworkX graph constructed from all bonds defined in the XML file
     bond_order : list, shape=(1,n_particles), dtype=int
         A list of the bond order of each particle in the system.
-    
     box : list, shape(3), dtype=float,
         Dimensions of the box as defined in the xml file, in order: Lx, Ly, and Lz.
         
     """
-    def __init__(self, xml_file=None, identify_molecules=True, ignore_zero_bond_order=False):
+    def __init__(self, file=None, frame=0, identify_molecules=True, ignore_zero_bond_order=False, molecule_dict=None):
+        """Initialize the System class.
         
+        This initializes the System class and will load the xml or gsd file if provided.
+        
+        Parameters
+        ----------
+        file : string, default=None
+            Name of the hoomd xml or gsd file to load
+        frame : int, optional, default=0
+        identify_molecules : bool, optional, default=True
+            If True, the code will group the particles based upon their underlying connectivity.
+            Particles bonded together will be considered a molecule
+        ignore_zero_bond_order : bool, optional, default=False
+            If True, particles without any bonds (i.e., bond order = 0) will be ignored when
+            identifying molecules (i.e., they will not appear in the molecule list).
+            If False, a particle with bond order = 0 will be considered to be a molecule.
+        molecule_dict : dict, dtype=str
+            A dict that defines the molecule 'pattern' and associated user defined name.
+            This is used for renaming molecules automatically identified.
+        Returns
+        ------
+        """
+        self._filename = None
         self._xyz = []
         self._n_particles = 0
         self._types = []
         self._bond_order = []
-        
+        self._bonds = []
+        self._angles = []
+        self._dihedrals = []
+        self._impropers = []
+        self._charges = []
+        self._masses = []
+        self._frame = frame
+        self._box = []
+            
         self._molecules = []
         self._unique_molecules = {}
         
         self._identify_molecules = identify_molecules
         self._ignore_zero_bond_order = ignore_zero_bond_order
         
-        if xml_file is not None:
-            self._xml_file = xml_file
-            self._load_xml()
-            if self._identify_molecules == True:
-                self._infer_molecules()
-    
-    # essentially the same workflow as the constructor
-    def load(self, xml_file=None, identify_molecules=True, ignore_zero_bond_order=False):
-    
-        self._identify_molecules = identify_molecules
-        self._ignore_zero_bond_order = ignore_zero_bond_order
-        
-        if xml_file is None:
-            warn("XML file not defined")
-        else:
-            self._xml_file = xml_file
-            self._load_xml()
-            if self._identify_molecules == True:
-                self._infer_molecules()
+        if file is not None:
+            self._filename = file
+            ext = file.split('.')[-1]
+            if "xml" in ext:
+                self._load_xml()
+            elif "gsd" in ext:
+                self._load_gsd(frame=self._frame)
 
+            if self._identify_molecules == True:
+                self._infer_molecules()
+            if molecule_dict is not None:
+                self.set_molecule_name_by_dictionary(molecule_dict)
+                
+    def _clear(self):
+        self._filename = None
+        self._xyz = []
+        self._n_particles = 0
+        self._types = []
+        self._bond_order = []
+        self._bonds = []
+        self._angles = []
+        self._dihedrals = []
+        self._impropers = []
+        self._charges = []
+        self._masses = []
+        self._box = []
+            
+        self._molecules = []
+        self._unique_molecules = {}
+        
+    # essentially the same workflow as the constructor
+    def load(self, file=None, frame=0, identify_molecules=True, ignore_zero_bond_order=False, molecule_dict=None):
+        """Loads an xml or gsd file.
+        
+        This load the xml or GSD file into the system class.
+        
+        Parameters
+        ----------
+        file : string, default=None
+            Name of the hoomd xml or gsd file to load
+        frame : int, optional, default=0
+        identify_molecules : bool, optional, default=True
+            If True, the code will group the particles based upon their underlying connectivity.
+            Particles bonded together will be considered a molecule
+        ignore_zero_bond_order : bool, optional, default=False
+            If True, particles without any bonds (i.e., bond order = 0) will be ignored when
+            identifying molecules (i.e., they will not appear in the molecule list).
+            If False, a particle with bond order = 0 will be considered to be a molecule.
+        molecule_dict : dict, dtype=str
+            A dict that defines the molecule 'pattern' and associated user defined name.
+            This is used for renaming molecules automatically identified.
+        Returns
+        ------
+        """
+        if file is None:
+            raise Exception("file not defined")
+        else:
+            self._clear()
+            self._identify_molecules = identify_molecules
+            self._ignore_zero_bond_order = ignore_zero_bond_order
+            self._frame = frame
+            self._filename = file
+            if "xml" in ext:
+                self._load_xml()
+            elif "gsd" in ext:
+                self._load_gsd(frame=self._frame)
+            if self._identify_molecules == True:
+                self._infer_molecules()
+            if molecule_dict is not None:
+                self.set_molecule_name_by_dictionary(molecule_dict)
+                
+            
+    def convert_mdtraj(self, mdtraj=None, frame=0, identify_molecules=True, ignore_zero_bond_order=False):
+        if mdtraj is None:
+            raise Exception("mdtraj traj not defined")
+        else:
+            self._ignore_zero_bond_order = ignore_zero_bond_order
+            self._identify_molecules = identify_molecules
+            self._clear()
+            
+            for xyz in fconfig.particles.position:
+                self._xyz.append(xyz)
+                self._charges.append(0) #assumes charge is zero
+                self._masses.append(1) #assumes mass is unity beacuse mdtraj doesn't store it.
+            
+            self._n_particles = len(self._xyz)
+
+            for atom in mdtraj.top.atoms:
+                self._types.append(atom.name)
+            self._box = list(mdtraj.unitcell_lengths[frame])
+            self._bonds = []
+            for bond in mdtraj.top.bonds:
+                temp_bond = [f'{bond.atom1.name}{bond.atom2.name}', bond.atom1.index, bond.atom2.index]
+                self._bonds.append(temp_bond)
+            
+            self._calc_bond_order()
+            if self._identify_molecules == True:
+                self._infer_molecules()
+    
     # generic function to parse the topology entries,
     # takes the element as an argument and  number of entries per line
     def _parse_topology(self, element, length):
@@ -140,10 +234,20 @@ class System(object):
             agg_array.append(float(entry_temp[i]))
         return agg_array
 
-
-    # main function to load and parse the XML
+    def _calc_bond_order(self):
+        # calculate bond_order
+        for i in range(0, self.n_particles):
+            self._bond_order.append(0)
+            
+        for bond in self._bonds:
+            i = bond[1]
+            j = bond[2]
+            self._bond_order[i] += 1
+            self._bond_order[j] += 1
+    
+    #  function to load and parse the XML
     def _load_xml(self):
-        self._tree = ET.parse(self._xml_file)
+        self._tree = ET.parse(self._filename)
         self._root = self._tree.getroot()
         self._config =  self._root.find('configuration')
         
@@ -181,14 +285,47 @@ class System(object):
         self._impropers = self._parse_topology(element='improper', length=5)
 
         # calculate bond_order
-        for i in range(0, self.n_particles):
-            self._bond_order.append(0)
+        self._calc_bond_order()
+        
+    # function to load and parse the GSD
+    def _load_gsd(self, frame):
+        if self._filename is None:
+            raise Exception("gsd_file not defined")
+        else:
+            f = gsd.hoomd.open(name=self._filename, mode='rb')
+            snapshot = f[frame]
             
-        for bond in self._bonds:
-            i = bond[1]
-            j = bond[2]
-            self._bond_order[i] += 1
-            self._bond_order[j] += 1
+            
+            for i, xyz in enumerate(snapshot.particles.position):
+                self._xyz.append(list(xyz))
+                self._masses.append(float(snapshot.particles.mass[i]))
+                self._charges.append(float(snapshot.particles.charge[i]))
+                
+            self._box = [float(snapshot.configuration.box[0]), float(snapshot.configuration.box[1]), float(snapshot.configuration.box[2])]
+            
+            for typeid in snapshot.particles.typeid:
+                self._types.append(snapshot.particles.types[typeid])
+
+            for bond, typeid in zip(snapshot.bonds.group,snapshot.bonds.typeid):
+                temp_bond = [snapshot.bonds.types[typeid], int(bond[0]), int(bond[1])]
+                self._bonds.append(temp_bond)
+            
+            for angle, typeid in zip(snapshot.angles.group,snapshot.angles.typeid):
+                temp_angle = [snapshot.angles.types[typeid], int(angle[0]), int(angle[1]), int(angle[2])]
+                self._angles.append(temp_angle)
+            
+            for dihedral, typeid in zip(snapshot.dihedrals.group,snapshot.dihedrals.typeid):
+                temp_dihedral = [snapshot.dihedrals.types[typeid], int(dihedral[0]), int(dihedral[1]), int(dihedral[2]), int(dihedral[3])]
+                self._dihedrals.append(temp_dihedral)
+
+            for improper, typeid in zip(snapshot.impropers.group,snapshot.impropers.typeid):
+                temp_improper = [snapshot.impropers.types[typeid], int(improper[0]), int(improper[1]), int(improper[2]), int(improper[3])]
+                self._impropers.append(temp_improper)
+            
+            self._n_particles = len(self._xyz)
+            
+            # calculate bond_order
+            self._calc_bond_order()
             
     # use networkx to create a graph, then look for which components are connected
     def _infer_molecules(self):
@@ -232,6 +369,22 @@ class System(object):
     # and re-assigns names of each molecule found for that pattern.
     
     def set_molecule_name_by_dictionary(self, molecule_dict):
+        """Assign molecule names.
+        
+        This function will assign names to the molecules in the system based upon the provided dictionary.
+        A pattern is constructed by concatenating partice names together into a single string.
+        Unique patterns in the system can be found in the `unique_molecules` dictionary.
+        
+        Parameters
+        ----------
+        molecule_dict : dict, dtype=str
+            A dict that defines the molecule 'pattern' and associated user defined name.
+            This is used for renaming molecules automatically identified.
+            Molecule pattern as the key and associated molecule name as the value in the dict,
+            i.e., {pattern: name}
+        Returns
+        ------
+        """
         for mol_name in molecule_dict:
             self._unique_molecules[mol_name] = molecule_dict[mol_name]
             
@@ -308,7 +461,3 @@ class System(object):
         return self._box
         
             
-"""
-if __name__ == "__main__":
-    print(canvas())
-"""
