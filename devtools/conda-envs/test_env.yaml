@@ -10,6 +10,7 @@ dependencies:
   - pip
   - networkx
   - mbuild
+  - gsd
 
     # Testing
   - pytest
