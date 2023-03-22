@@ -9,7 +9,7 @@ dependencies:
   - networkx
   - numpydoc
   - sphinx_rtd_theme
-
+  - gsd
 
     # Pip-only installs
   #- pip:

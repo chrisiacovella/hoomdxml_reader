@@ -59,6 +59,21 @@ def test_loader_gsd():
     assert len(system.unique_molecules) == 1
     assert 'AABB' in system.unique_molecules
     
+    system._clear()
+    assert len(system.box) == 0
+    assert system.n_particles == 0
+    assert len(system.xyz) == 0
+    assert len(system.masses) == 0
+    assert len(system.charges) == 0
+    assert len(system.bonds) == 0
+    assert len(system.angles) == 0
+    assert len(system.dihedrals) == 0
+    assert len(system.impropers) == 0
+    assert len(system.bond_order) == 0
+    assert len(system.molecules) == 0
+    assert len(system.unique_molecules) == 0
+    assert system._filename == None
+    
 def test_loader_xml_basic():
     cwd = os.getcwd()
     system = hxml.System(cwd + "/hoomdxml_reader/tests/example.hoomdxml")

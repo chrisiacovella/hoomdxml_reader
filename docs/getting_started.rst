@@ -119,6 +119,7 @@ Usage
 Basic usage
 ------------
 To load a HOOMD-blue XML file or GSD file, we need only pass the file path to the constructor.
+
 .. code:: ipython3
 
     import hoomdxml_reader as hxml

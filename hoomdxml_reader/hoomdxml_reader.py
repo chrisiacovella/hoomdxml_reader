@@ -180,7 +180,7 @@ class System(object):
             if molecule_dict is not None:
                 self.set_molecule_name_by_dictionary(molecule_dict)
                 
-            
+    """
     def convert_mdtraj(self, mdtraj=None, frame=0, identify_molecules=True, ignore_zero_bond_order=False):
         if mdtraj is None:
             raise Exception("mdtraj traj not defined")
@@ -207,7 +207,7 @@ class System(object):
             self._calc_bond_order()
             if self._identify_molecules == True:
                 self._infer_molecules()
-    
+    """
     # generic function to parse the topology entries,
     # takes the element as an argument and  number of entries per line
     def _parse_topology(self, element, length):
