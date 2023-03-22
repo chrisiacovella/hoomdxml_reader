@@ -15,65 +15,43 @@ from warnings import warn
 
 class System(object):
     """
-    Class that stores system information.
+    Class that stores system information from XML and GSD files.
     
     A class to load hoomd XML or GSD formatted configuration files and store the
     information encoded in these files. This class will also optionally
     goup the underlying particles into molecules, inferred based upon
     the connectivity of particles as defined in the bonds section of
-    the configuration file.
-            
+    the configuration file. If an XML or GSD file is passed during instantiation,
+    it will load and parse file provided.
+                 
+    Parameters
+    ----------
+    file : string, optional, default=None
+        Name of the hoomd xml or gsd file to load
+    frame : int, optional, default=0
+    identify_molecules : bool, optional, default=True
+        If True, the code will group the particles based upon their underlying connectivity.
+        Particles bonded together will be considered a molecule
+    ignore_zero_bond_order : bool, optional, default=False
+        If True, particles without any bonds (i.e., bond order = 0) will be ignored when
+        identifying molecules (i.e., they will not appear in the molecule list).
+        If False, a particle with bond order = 0 will be considered to be a molecule.
+    molecule_dict : dict, dtype=str, optional, default=None
+        A dict that defines the molecule 'pattern' and associated user defined name.
+        This is used for renaming molecules automatically identified.
     Returns
-    -------
-    n_particles : int
-        Number of particles in the entire system
-    xyz : list shape=(3,n_particles), dtype=float
-        List containing a list of x, y, z coordinates of each particle.
-    types : list, shape=(1,n_particles), dtype=str
-        List of type names of all particles in the system.
-    masses : list, shape=(1,n_particles), dtype=float
-        List of masses of all particles in the system.
-    charges : list, shape=(1,n_particles), dtype=float
-        List of charges of all particles in the system.
-    bonds : list, shape=(3, n_bonds), dtype=(str, int, int)
-        List of all bonds in the system.  The first entry per bond is the
-        name of the bond (str) as defined in the xml file,
-        followed by indices for each particle in the bond.
-    angles : list, shape=(4, n_angles), dtype=(str, int, int, int)
-        List of all angles in the system.  The first entry per angle is the
-        name of the angle (str) as defined in the xml file,
-        followed by indices for each particle in the angle.
-    dihedrals : list, shape=(5, n_dihedrals), dtype=(str, int, int, int, int)
-        List of all dihedrals in the system.  The first entry per dihedral is the
-        name of the dihedral (str) as defined in the xml file,
-        followed by indices for each particle in the dihedral.
-    impropers : list, shape=(5, n_impropers), dtype=(str, int, int, int, int)
-        List of all impropers in the system.  The first entry per improper is the
-        name of the improper (str) as defined in the xml file,
-        followed by indices for each particle in the impropers.
-    molecules : list, dtype=Molecule
-        List containing each molecule identified by the code. Each entry
-        in the list is an instance of the Molecule class.
-    unique_molecules : dict, dtype=str
-        A dict that provides the molecule 'pattern' and associated assigned name ("molecule{i}")
-        for each unique molecule type identified in the system.
-        This is useful for allowing definition of the molecule_dict for assigning molecules names.
-    graph : networkx graph
-        NetworkX graph constructed from all bonds defined in the XML file
-    bond_order : list, shape=(1,n_particles), dtype=int
-        A list of the bond order of each particle in the system.
-    box : list, shape(3), dtype=float,
-        Dimensions of the box as defined in the xml file, in order: Lx, Ly, and Lz.
-        
+    ------
     """
+
     def __init__(self, file=None, frame=0, identify_molecules=True, ignore_zero_bond_order=False, molecule_dict=None):
         """Initialize the System class.
         
-        This initializes the System class and will load the xml or gsd file if provided.
+        This initializes the System class.  If an XML or GSD file is passed during instantiation,
+        it will load and parse file provided.
         
         Parameters
         ----------
-        file : string, default=None
+        file : string, optional, default=None
             Name of the hoomd xml or gsd file to load
         frame : int, optional, default=0
         identify_molecules : bool, optional, default=True
@@ -83,7 +61,7 @@ class System(object):
             If True, particles without any bonds (i.e., bond order = 0) will be ignored when
             identifying molecules (i.e., they will not appear in the molecule list).
             If False, a particle with bond order = 0 will be considered to be a molecule.
-        molecule_dict : dict, dtype=str
+        molecule_dict : dict, dtype=str, optional, default=None
             A dict that defines the molecule 'pattern' and associated user defined name.
             This is used for renaming molecules automatically identified.
         Returns
@@ -143,11 +121,12 @@ class System(object):
     def load(self, file=None, frame=0, identify_molecules=True, ignore_zero_bond_order=False, molecule_dict=None):
         """Loads an xml or gsd file.
         
-        This load the xml or GSD file into the system class.
+        Load the xml or GSD file into the system class. This function will clear
+        any information already loaded into the System class.
         
         Parameters
         ----------
-        file : string, default=None
+        file : string, optional, default=None
             Name of the hoomd xml or gsd file to load
         frame : int, optional, default=0
         identify_molecules : bool, optional, default=True
@@ -157,20 +136,22 @@ class System(object):
             If True, particles without any bonds (i.e., bond order = 0) will be ignored when
             identifying molecules (i.e., they will not appear in the molecule list).
             If False, a particle with bond order = 0 will be considered to be a molecule.
-        molecule_dict : dict, dtype=str
+        molecule_dict : dict, dtype=str, optional, default=None
             A dict that defines the molecule 'pattern' and associated user defined name.
             This is used for renaming molecules automatically identified.
         Returns
         ------
         """
         if file is None:
-            raise Exception("file not defined")
+            raise Exception("You must provide the name of the XML or GSD file to parse.")
         else:
             self._clear()
             self._identify_molecules = identify_molecules
             self._ignore_zero_bond_order = ignore_zero_bond_order
             self._frame = frame
             self._filename = file
+            
+            ext = file.split('.')[-1]
             if "xml" in ext:
                 self._load_xml()
             elif "gsd" in ext:
@@ -181,6 +162,9 @@ class System(object):
                 self.set_molecule_name_by_dictionary(molecule_dict)
                 
     """
+    # This would populate the fields from an mdtraj trajectory.
+    # I've commented this out because mdtraj format requires us to assume information,
+    # for example, about charge and mass, and does not including angle, dihedral, or improper information
     def convert_mdtraj(self, mdtraj=None, frame=0, identify_molecules=True, ignore_zero_bond_order=False):
         if mdtraj is None:
             raise Exception("mdtraj traj not defined")
@@ -289,43 +273,41 @@ class System(object):
         
     # function to load and parse the GSD
     def _load_gsd(self, frame):
-        if self._filename is None:
-            raise Exception("gsd_file not defined")
-        else:
-            f = gsd.hoomd.open(name=self._filename, mode='rb')
-            snapshot = f[frame]
+        
+        f = gsd.hoomd.open(name=self._filename, mode='rb')
+        snapshot = f[frame]
+        
+        
+        for i, xyz in enumerate(snapshot.particles.position):
+            self._xyz.append(list(xyz))
+            self._masses.append(float(snapshot.particles.mass[i]))
+            self._charges.append(float(snapshot.particles.charge[i]))
             
-            
-            for i, xyz in enumerate(snapshot.particles.position):
-                self._xyz.append(list(xyz))
-                self._masses.append(float(snapshot.particles.mass[i]))
-                self._charges.append(float(snapshot.particles.charge[i]))
-                
-            self._box = [float(snapshot.configuration.box[0]), float(snapshot.configuration.box[1]), float(snapshot.configuration.box[2])]
-            
-            for typeid in snapshot.particles.typeid:
-                self._types.append(snapshot.particles.types[typeid])
+        self._box = [float(snapshot.configuration.box[0]), float(snapshot.configuration.box[1]), float(snapshot.configuration.box[2])]
+        
+        for typeid in snapshot.particles.typeid:
+            self._types.append(snapshot.particles.types[typeid])
 
-            for bond, typeid in zip(snapshot.bonds.group,snapshot.bonds.typeid):
-                temp_bond = [snapshot.bonds.types[typeid], int(bond[0]), int(bond[1])]
-                self._bonds.append(temp_bond)
-            
-            for angle, typeid in zip(snapshot.angles.group,snapshot.angles.typeid):
-                temp_angle = [snapshot.angles.types[typeid], int(angle[0]), int(angle[1]), int(angle[2])]
-                self._angles.append(temp_angle)
-            
-            for dihedral, typeid in zip(snapshot.dihedrals.group,snapshot.dihedrals.typeid):
-                temp_dihedral = [snapshot.dihedrals.types[typeid], int(dihedral[0]), int(dihedral[1]), int(dihedral[2]), int(dihedral[3])]
-                self._dihedrals.append(temp_dihedral)
+        for bond, typeid in zip(snapshot.bonds.group,snapshot.bonds.typeid):
+            temp_bond = [snapshot.bonds.types[typeid], int(bond[0]), int(bond[1])]
+            self._bonds.append(temp_bond)
+        
+        for angle, typeid in zip(snapshot.angles.group,snapshot.angles.typeid):
+            temp_angle = [snapshot.angles.types[typeid], int(angle[0]), int(angle[1]), int(angle[2])]
+            self._angles.append(temp_angle)
+        
+        for dihedral, typeid in zip(snapshot.dihedrals.group,snapshot.dihedrals.typeid):
+            temp_dihedral = [snapshot.dihedrals.types[typeid], int(dihedral[0]), int(dihedral[1]), int(dihedral[2]), int(dihedral[3])]
+            self._dihedrals.append(temp_dihedral)
 
-            for improper, typeid in zip(snapshot.impropers.group,snapshot.impropers.typeid):
-                temp_improper = [snapshot.impropers.types[typeid], int(improper[0]), int(improper[1]), int(improper[2]), int(improper[3])]
-                self._impropers.append(temp_improper)
-            
-            self._n_particles = len(self._xyz)
-            
-            # calculate bond_order
-            self._calc_bond_order()
+        for improper, typeid in zip(snapshot.impropers.group,snapshot.impropers.typeid):
+            temp_improper = [snapshot.impropers.types[typeid], int(improper[0]), int(improper[1]), int(improper[2]), int(improper[3])]
+            self._impropers.append(temp_improper)
+        
+        self._n_particles = len(self._xyz)
+        
+        # calculate bond_order
+        self._calc_bond_order()
             
     # use networkx to create a graph, then look for which components are connected
     def _infer_molecules(self):
@@ -383,7 +365,7 @@ class System(object):
             Molecule pattern as the key and associated molecule name as the value in the dict,
             i.e., {pattern: name}
         Returns
-        ------
+        -------
         """
         for mol_name in molecule_dict:
             self._unique_molecules[mol_name] = molecule_dict[mol_name]
@@ -391,73 +373,248 @@ class System(object):
         for molecule in self._molecules:
              molecule.set_molecule_name(self._unique_molecules[molecule.pattern])
     @property
+    def n_particles(self):
+        """The total number of particles in the system
+                                                
+        Parameters
+        ----------
+        Returns
+        -------
+        n_particles : int
+            Number of particles in the system
+        """
+        return self._n_particles
+        
+    @property
+    def n_bonds(self):
+        """The total number of bonds in the system
+
+        Parameters
+        ----------
+        Returns
+        -------
+        n_bonds : int
+            Number of bonds in the system
+        """
+        return len(self._bonds)
+    
+    @property
+    def n_angles(self):
+        """The total number of angles in the system
+
+        Parameters
+        ----------
+        Returns
+        -------
+        n_angles : int
+            Number of angles in the system
+        """
+        return len(self._angles)
+        
+    @property
+    def n_dihedrals(self):
+        """The total number of dihedrals in the system
+
+        Parameters
+        ----------
+        Returns
+        -------
+        n_dihedrals : int
+            Number of dihedrals in the system
+        """
+        return len(self._dihedrals)
+    
+    @property
+    def n_impropers(self):
+        """The total number of impropers in the system
+
+        Parameters
+        ----------
+        Returns
+        -------
+        n_impropers : int
+            Number of impropers in the system
+        """
+        return len(self._impropers)
+ 
+    @property
     def xyz(self):
-        """A list of xyz coordinates for each particle, as defined in the source file."""
+        """A list of xyz coordinates for each particle.
+        
+        Parameters
+        ----------
+        Returns
+        -------
+        xyz : list shape=(3,n_particles), dtype=float
+            List containing a list of x, y, z coordinates of each particle.
+        """
         return self._xyz
     
     @property
     def types(self):
-        """A list of all particle types defined in the source file."""
+        """A list of all particle types.
+                
+        Parameters
+        ----------
+        Returns
+        -------
+        types : list, shape=(1,n_particles), dtype=str
+            List of type names of all particles in the system.
+
+        """
         return self._types
  
     @property
     def masses(self):
-        """A list of all masses defined in the source file."""
+        """A list of all masses defined in the source file.
+                        
+        Parameters
+        ----------
+        Returns
+        -------
+        masses : list, shape=(1,n_particles), dtype=float
+            List of masses of all particles in the system.
+        """
         return self._masses
         
     @property
     def charges(self):
-        """A list of all charges defined in the source file."""
+        """A list of all charges defined in the source file.
+                                
+        Parameters
+        ----------
+        Returns
+        -------
+        charges : list, shape=(1,n_particles), dtype=float
+            List of charges of all particles in the system.
+        """
         return self._charges
         
     @property
     def bonds(self):
-        """A list of all bonds defined in the source file."""
+        """A list of all bonds defined in the source file.
+                                        
+        Parameters
+        ----------
+        Returns
+        -------
+        bonds : list, shape=(3, n_bonds), dtype=(str, int, int)
+            List of all bonds in the system.  The first entry per bond is the
+            name of the bond (str) as defined in the source file.
+        """
         return self._bonds
 
     @property
     def angles(self):
-        """A list of all angles defined in the source file."""
+        """A list of all angles defined in the source file.
+        
+        Parameters
+        ----------
+        Returns
+        -------
+        angles : list, shape=(4, n_angles), dtype=(str, int, int, int)
+            List of all angles in the system.  The first entry per angles is the
+            name of the angle (str) as defined in the source file.
+        """
         return self._angles
    
     @property
     def dihedrals(self):
-        """A list of all dihedrals defined in the source file"""
+        """A list of all dihedrals defined in the source file
+                
+        Parameters
+        ----------
+        Returns
+        -------
+        dihedrals : list, shape=(5, n_dihedrals), dtype=(str, int, int, int, int)
+            List of all dihedrals in the system.  The first entry per dihedral is the
+            name of the dihedral (str) as defined in the source file.
+        """
         return self._dihedrals
 
     @property
     def impropers(self):
-        """A list of all dihedrals defined in the source file"""
+        """A list of all impropers defined in the source file
+        
+        Parameters
+        ----------
+        Returns
+        -------
+        impropers : list, shape=(5, n_impropers), dtype=(str, int, int, int, int)
+            List of all impropers in the system.  The first entry per improper is the
+            name of the improper (str) as defined in the source file.
+        """
         return self._impropers
 
     @property
     def molecules(self):
-        """This is a list of all molecules found in the system, where each entry corresponds to an instance of the Molecule class."""
+        """This is a list of all molecules found in the system, where each entry corresponds to an instance of the Molecule class.
+                
+        Parameters
+        ----------
+        Returns
+        -------
+        molecules : list, dtype=Molecule
+            List containing each molecule identified by the code. Each entry
+            in the list is an instance of the Molecule class.
+        """
         return self._molecules
 
     @property
     def unique_molecules(self):
-        """A dict that contains the molecule pattern as the key and associated molecule name as the value, for each unique molecule in the system. """
+        """A dict that contains the molecule pattern as the key and associated molecule name as the value, for each unique molecule in the system.
+                        
+        Parameters
+        ----------
+        Returns
+        -------
+        unique_molecules : dict, dtype=str
+            A dict that provides the molecule 'pattern' and associated assigned name ("molecule{i}")
+            for each unique molecule type identified in the system. This is useful for allowing definition of
+            the molecule_dict for assigning molecules names.
+        """
         return self._unique_molecules
 
     @property
     def graph(self):
-        """A networkx graph generated from the bond information included in the source file."""
+        """A networkx graph generated from the bond information included in the source file.
+                                
+        Parameters
+        ----------
+        Returns
+        -------
+        graph : networkx graph
+            NetworkX graph constructed from all bonds defined in the XML file
+
+        """
         return self._graph
         
     @property
     def bond_order(self):
-        """A list containing an integer bond order (i.e., total number of bonds) of each particle in the system"""
+        """A list containing an integer bond order (i.e., total number of bonds) of each particle in the system.
+                                        
+        Parameters
+        ----------
+        Returns
+        -------
+        bond_order : list, shape=(1,n_particles), dtype=int
+            A list of the bond order of each particle in the system.
+        """
         return self._bond_order
 
-    @property
-    def n_particles(self):
-        """The total number of particles found in the XML file"""
-        return self._n_particles
+
     
     @property
     def box(self):
-        """List of the box length in order Lx, Ly, Lz. Boxes are assumed to be centered a the origin."""
+        """List of the box lengths defined in the source file.
+                                                
+        Parameters
+        ----------
+        Returns
+        -------
+        box : list, shape(3), dtype=float,
+            List of the box length formatted as [Lx, Ly, Lz]
+        """
         return self._box
         
             
