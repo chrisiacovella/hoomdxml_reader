@@ -42,6 +42,11 @@ def test_loader_gsd():
     assert len(system.dihedrals) == 2
     assert len(system.impropers) == 2
     
+    assert len(system.bonds) == system.n_bonds
+    assert len(system.angles) == system.n_angles
+    assert len(system.dihedrals) == system.n_dihedrals
+    assert len(system.impropers) == system.n_impropers
+    
     assert system.bonds == [['A-A', 0, 1], ['A-B', 1, 2], ['B-B', 2, 3], ['A-A', 4, 5], ['A-B', 5, 6], ['B-B', 6, 7]]
     
     assert system.angles == [['A-A-B', 0, 1, 2], ['A-B-B', 1, 2, 3], ['A-A-B', 4, 5, 6], ['A-B-B', 5, 6, 7]]
@@ -73,6 +78,24 @@ def test_loader_gsd():
     assert len(system.molecules) == 0
     assert len(system.unique_molecules) == 0
     assert system._filename == None
+    
+    #check the loading function
+    system = hxml.System()
+    system.load(cwd + "/hoomdxml_reader/tests/test.gsd")
+    assert len(system.box) == 3
+    assert system.box == [7.0, 5.0, 4.0]
+    assert system.n_particles == 8
+    assert len(system.xyz) == 8
+    assert system.xyz == [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [2.0, 0.0, 0.0], [3.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 0.0], [2.0, 1.0, 0.0], [3.0, 1.0, 0.0]]
+    
+    assert len(system.bonds) == 6
+    assert len(system.angles) == 4
+    assert len(system.dihedrals) == 2
+    assert len(system.impropers) == 2
+    
+    with pytest.raises(Exception):
+        system.load()
+
     
 def test_loader_xml_basic():
     cwd = os.getcwd()
@@ -119,6 +142,7 @@ def test_loader_xml_basic():
     assert 'water' in system.unique_molecules
     assert 'CH3CH2CH2CH2CH3' in system.unique_molecules
  
+    
 def test_loader_xml_ignore_zero_bo():
     cwd = os.getcwd()
     # test ignoring particles with zero bond order
@@ -170,6 +194,13 @@ def test_rename_molecules():
 
     assert system.molecules[0].name == 'pentane'
     
+    system = hxml.System(cwd + "/hoomdxml_reader/tests/example.hoomdxml", molecule_dict=molecule_dict)
+    assert system.molecules[0].name == 'pentane'
+
+    system = hxml.System()
+    system.load(cwd + "/hoomdxml_reader/tests/example.hoomdxml", molecule_dict=molecule_dict)
+    assert system.molecules[0].name == 'pentane'
+
 
 def test_Molecule_class():
     molecule = Molecule()
