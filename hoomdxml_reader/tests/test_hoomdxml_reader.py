@@ -17,10 +17,50 @@ import mbuild as mb
 def test_hoomdxml_reader_imported():
     """Sample test, will always pass so long as import statement worked."""
     assert "hoomdxml_reader" in sys.modules
-    
-def test_loader():
+ 
+def test_loader_gsd():
     cwd = os.getcwd()
-    print(cwd)
+    system = hxml.System(cwd + "/hoomdxml_reader/tests/test.gsd")
+    
+    assert system._identify_molecules == True
+    assert system._ignore_zero_bond_order == False
+    
+    assert len(system.box) == 3
+    assert system.box == [7.0, 5.0, 4.0]
+    assert system.n_particles == 8
+    assert len(system.xyz) == 8
+    assert system.xyz == [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [2.0, 0.0, 0.0], [3.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 0.0], [2.0, 1.0, 0.0], [3.0, 1.0, 0.0]]
+    
+    assert len(system.bond_order) == 8
+    assert system.bond_order == [1, 2, 2, 1, 1, 2, 2, 1]
+    
+    assert len(system.types) == 8
+    assert system.types == ['A', 'A', 'B', 'B', 'A', 'A', 'B', 'B']
+    
+    assert len(system.bonds) == 6
+    assert len(system.angles) == 4
+    assert len(system.dihedrals) == 2
+    assert len(system.impropers) == 2
+    
+    assert system.bonds == [['A-A', 0, 1], ['A-B', 1, 2], ['B-B', 2, 3], ['A-A', 4, 5], ['A-B', 5, 6], ['B-B', 6, 7]]
+    
+    assert system.angles == [['A-A-B', 0, 1, 2], ['A-B-B', 1, 2, 3], ['A-A-B', 4, 5, 6], ['A-B-B', 5, 6, 7]]
+    
+    assert system.dihedrals == [['A-A-B-B', 0, 1, 2, 3], ['A-A-B-B', 4, 5, 6, 7]]
+    assert system.impropers == [['improp', 0, 1, 2, 3], ['improp', 4, 5, 6, 7]]
+    
+    assert len(system.masses) == 8
+    assert system.masses == [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    
+    assert len(system.charges) == 8
+    assert system.charges == [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    
+    assert len(system.molecules) == 2
+    assert len(system.unique_molecules) == 1
+    assert 'AABB' in system.unique_molecules
+    
+def test_loader_xml_basic():
+    cwd = os.getcwd()
     system = hxml.System(cwd + "/hoomdxml_reader/tests/example.hoomdxml")
     
     assert system._identify_molecules == True
@@ -63,7 +103,9 @@ def test_loader():
     assert len(system.unique_molecules) == 2
     assert 'water' in system.unique_molecules
     assert 'CH3CH2CH2CH2CH3' in system.unique_molecules
-    
+ 
+def test_loader_xml_ignore_zero_bo():
+    cwd = os.getcwd()
     # test ignoring particles with zero bond order
     system = hxml.System(cwd + "/hoomdxml_reader/tests/example.hoomdxml", ignore_zero_bond_order=True)
     

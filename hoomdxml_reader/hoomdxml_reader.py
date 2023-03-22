@@ -117,17 +117,35 @@ class System(object):
             if molecule_dict is not None:
                 self.set_molecule_name_by_dictionary(molecule_dict)
                 
-    
+    def _clear(self):
+        self._filename = None
+        self._xyz = []
+        self._n_particles = 0
+        self._types = []
+        self._bond_order = []
+        self._bonds = []
+        self._angles = []
+        self._dihedrals = []
+        self._impropers = []
+        self._charges = []
+        self._masses = []
+        self._box = []
+            
+        self._molecules = []
+        self._unique_molecules = {}
+        
     # essentially the same workflow as the constructor
     def load(self, file=None, frame=0, identify_molecules=True, ignore_zero_bond_order=False, molecule_dict=None):
     
-        self._identify_molecules = identify_molecules
-        self._ignore_zero_bond_order = ignore_zero_bond_order
-        self._frame = frame
+
         
         if file is None:
             warn("file not defined")
         else:
+            self._clear()
+            self._identify_molecules = identify_molecules
+            self._ignore_zero_bond_order = ignore_zero_bond_order
+            self._frame = frame
             self._filename = file
             if "xml" in ext:
                 self._load_xml()
@@ -143,7 +161,9 @@ class System(object):
         if mdtraj is None:
             warn("mdtraj traj not defined")
         else:
-
+            self._ignore_zero_bond_order = ignore_zero_bond_order
+            self._identify_molecules = identify_molecules
+            self._clear()
             
             for xyz in fconfig.particles.position:
                 self._xyz.append(xyz)
@@ -251,32 +271,31 @@ class System(object):
             f = gsd.hoomd.open(name=self._filename, mode='rb')
             snapshot = f[frame]
             
-            self._xyz = list(snapshot.particles.position)
-            self._masses = list(snapshot.particles.mass)
-            self._charges = list(snapshot.particles.charge)
-            self._box = list(snapshot.configuration.box[0:3])
+            
+            for i, xyz in enumerate(snapshot.particles.position):
+                self._xyz.append(list(xyz))
+                self._masses.append(float(snapshot.particles.mass[i]))
+                self._charges.append(float(snapshot.particles.charge[i]))
+                
+            self._box = [float(snapshot.configuration.box[0]), float(snapshot.configuration.box[1]), float(snapshot.configuration.box[2])]
             
             for typeid in snapshot.particles.typeid:
                 self._types.append(snapshot.particles.types[typeid])
 
             for bond, typeid in zip(snapshot.bonds.group,snapshot.bonds.typeid):
-                temp_bond = [snapshot.bonds.types[typeid], bond[0], bond[1]]
+                temp_bond = [snapshot.bonds.types[typeid], int(bond[0]), int(bond[1])]
                 self._bonds.append(temp_bond)
             
             for angle, typeid in zip(snapshot.angles.group,snapshot.angles.typeid):
-                temp_angle = [snapshot.angles.types[typeid], angle[0], angle[1], angle[2]]
-                self._angles.append(temp_angle)
-
-            for angle, typeid in zip(snapshot.angles.group,snapshot.angles.typeid):
-                temp_angle = [snapshot.angles.types[typeid], angle[0], angle[1], angle[2]]
+                temp_angle = [snapshot.angles.types[typeid], int(angle[0]), int(angle[1]), int(angle[2])]
                 self._angles.append(temp_angle)
             
             for dihedral, typeid in zip(snapshot.dihedrals.group,snapshot.dihedrals.typeid):
-                temp_dihedral = [snapshot.dihedrals.types[typeid], dihedral[0], dihedral[1], dihedral[2], dihedral[3]]
+                temp_dihedral = [snapshot.dihedrals.types[typeid], int(dihedral[0]), int(dihedral[1]), int(dihedral[2]), int(dihedral[3])]
                 self._dihedrals.append(temp_dihedral)
 
             for improper, typeid in zip(snapshot.impropers.group,snapshot.impropers.typeid):
-                temp_improper = [snapshot.impropers.types[typeid], improper[0], improper[1], improper[2], improper[3]]
+                temp_improper = [snapshot.impropers.types[typeid], int(improper[0]), int(improper[1]), int(improper[2]), int(improper[3])]
                 self._impropers.append(temp_improper)
             
             self._n_particles = len(self._xyz)
