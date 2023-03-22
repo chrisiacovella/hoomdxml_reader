@@ -6,6 +6,8 @@ Module for reading legacy hoomd XML formatted files.
 __all__ = ["System"]
 
 import networkx as nx
+import gsd.hoomd
+
 import xml.etree.ElementTree as ET
 
 from hoomdxml_reader.molecule import Molecule
@@ -13,23 +15,23 @@ from warnings import warn
 
 class System(object):
     """
-    System class.
+    Class that stores system information.
     
-    
-    A class to load hoomd XML formatted configuration files and store the
+    A class to load hoomd XML or GSD formatted configuration files and store the
     information encoded in these files. This class will also optionally
     goup the underlying particles into molecules, inferred based upon
     the connectivity of particles as defined in the bonds section of
-    the XML file.
+    the configuration file.
 
     Parameters
     ----------
-        xml_file : string, default=None
-            Name of the hoomd xml file to load
-        identify_molecules : bool, default=True
+        file : string, default=None
+            Name of the hoomd xml or gsd file to load
+        frame : int, optional, default=0
+        identify_molecules : bool, optional, default=True
             If True, the code will group the particles based upon their underlying connectivity.
             Particles bonded together will be considered a molecule
-        ignore_zero_bond_order : bool, default=False
+        ignore_zero_bond_order : bool, optional, default=False
             If True, particles without any bonds (i.e., bond order = 0) will be ignored when
             identifying molecules (i.e., they will not appear in the molecule list).
             If False, a particle with bond order = 0 will be considered to be a molecule.
@@ -76,56 +78,83 @@ class System(object):
         NetworkX graph constructed from all bonds defined in the XML file
     bond_order : list, shape=(1,n_particles), dtype=int
         A list of the bond order of each particle in the system.
-    
     box : list, shape(3), dtype=float,
         Dimensions of the box as defined in the xml file, in order: Lx, Ly, and Lz.
         
     """
-    def __init__(self, xml_file=None, identify_molecules=True, ignore_zero_bond_order=False):
+    def __init__(self, file=None, frame=0, identify_molecules=True, ignore_zero_bond_order=False, molecule_dict=None):
         
-        self._xml_file = None
+        self._filename = None
         self._xyz = []
         self._n_particles = 0
         self._types = []
         self._bond_order = []
-        
+        self._bonds = []
+        self._angles = []
+        self._dihedrals = []
+        self._impropers = []
+        self._charges = []
+        self._masses = []
+        self._frame = frame
+        self._box = []
+            
         self._molecules = []
         self._unique_molecules = {}
         
         self._identify_molecules = identify_molecules
         self._ignore_zero_bond_order = ignore_zero_bond_order
         
-        if xml_file is not None:
-            self._xml_file = xml_file
-            self._load_xml()
+        if file is not None:
+            self._filename = file
+            ext = file.split('.')[-1]
+            if "xml" in ext:
+                self._load_xml()
+            elif "gsd" in ext:
+                self._load_gsd(frame=self._frame)
+
             if self._identify_molecules == True:
                 self._infer_molecules()
+            if molecule_dict is not None:
+                self.set_molecule_name_by_dictionary(molecule_dict)
+                
     
     # essentially the same workflow as the constructor
-    def load(self, xml_file=None, identify_molecules=True, ignore_zero_bond_order=False):
+    def load(self, file=None, frame=0, identify_molecules=True, ignore_zero_bond_order=False, molecule_dict=None):
     
         self._identify_molecules = identify_molecules
         self._ignore_zero_bond_order = ignore_zero_bond_order
+        self._frame = frame
         
-        if xml_file is None:
-            warn("XML file not defined")
+        if file is None:
+            warn("file not defined")
         else:
-            self._xml_file = xml_file
-            self._load_xml()
+            self._filename = file
+            if "xml" in ext:
+                self._load_xml()
+            elif "gsd" in ext:
+                self._load_gsd(frame=self._frame)
             if self._identify_molecules == True:
                 self._infer_molecules()
+            if molecule_dict is not None:
+                self.set_molecule_name_by_dictionary(molecule_dict)
                 
+            
     def convert_mdtraj(self, mdtraj=None, frame=0, identify_molecules=True, ignore_zero_bond_order=False):
         if mdtraj is None:
             warn("mdtraj traj not defined")
         else:
-            for xyz in mdtraj.xyz[frame]:
+
+            
+            for xyz in fconfig.particles.position:
                 self._xyz.append(xyz)
-                self._n_particles = len(self.xyz)
-                
+                self._charges.append(0) #assumes charge is zero
+                self._masses.append(1) #assumes mass is unity beacuse mdtraj doesn't store it.
+            
+            self._n_particles = len(self._xyz)
+
             for atom in mdtraj.top.atoms:
                 self._types.append(atom.name)
-            
+            self._box = list(mdtraj.unitcell_lengths[frame])
             self._bonds = []
             for bond in mdtraj.top.bonds:
                 temp_bond = [f'{bond.atom1.name}{bond.atom2.name}', bond.atom1.index, bond.atom2.index]
@@ -172,9 +201,9 @@ class System(object):
             self._bond_order[i] += 1
             self._bond_order[j] += 1
     
-    # main function to load and parse the XML
+    #  function to load and parse the XML
     def _load_xml(self):
-        self._tree = ET.parse(self._xml_file)
+        self._tree = ET.parse(self._filename)
         self._root = self._tree.getroot()
         self._config =  self._root.find('configuration')
         
@@ -213,6 +242,47 @@ class System(object):
 
         # calculate bond_order
         self._calc_bond_order()
+        
+    # function to load and parse the GSD
+    def _load_gsd(self, frame):
+        if self._filename is None:
+            warn("gsd_file not defined")
+        else:
+            f = gsd.hoomd.open(name=self._filename, mode='rb')
+            snapshot = f[frame]
+            
+            self._xyz = list(snapshot.particles.position)
+            self._masses = list(snapshot.particles.mass)
+            self._charges = list(snapshot.particles.charge)
+            self._box = list(snapshot.configuration.box[0:3])
+            
+            for typeid in snapshot.particles.typeid:
+                self._types.append(snapshot.particles.types[typeid])
+
+            for bond, typeid in zip(snapshot.bonds.group,snapshot.bonds.typeid):
+                temp_bond = [snapshot.bonds.types[typeid], bond[0], bond[1]]
+                self._bonds.append(temp_bond)
+            
+            for angle, typeid in zip(snapshot.angles.group,snapshot.angles.typeid):
+                temp_angle = [snapshot.angles.types[typeid], angle[0], angle[1], angle[2]]
+                self._angles.append(temp_angle)
+
+            for angle, typeid in zip(snapshot.angles.group,snapshot.angles.typeid):
+                temp_angle = [snapshot.angles.types[typeid], angle[0], angle[1], angle[2]]
+                self._angles.append(temp_angle)
+            
+            for dihedral, typeid in zip(snapshot.dihedrals.group,snapshot.dihedrals.typeid):
+                temp_dihedral = [snapshot.dihedrals.types[typeid], dihedral[0], dihedral[1], dihedral[2], dihedral[3]]
+                self._dihedrals.append(temp_dihedral)
+
+            for improper, typeid in zip(snapshot.impropers.group,snapshot.impropers.typeid):
+                temp_improper = [snapshot.impropers.types[typeid], improper[0], improper[1], improper[2], improper[3]]
+                self._impropers.append(temp_improper)
+            
+            self._n_particles = len(self._xyz)
+            
+            # calculate bond_order
+            self._calc_bond_order()
             
     # use networkx to create a graph, then look for which components are connected
     def _infer_molecules(self):
