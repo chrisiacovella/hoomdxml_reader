@@ -22,22 +22,6 @@ class System(object):
     goup the underlying particles into molecules, inferred based upon
     the connectivity of particles as defined in the bonds section of
     the configuration file.
-
-    Parameters
-    ----------
-        file : string, default=None
-            Name of the hoomd xml or gsd file to load
-        frame : int, optional, default=0
-        identify_molecules : bool, optional, default=True
-            If True, the code will group the particles based upon their underlying connectivity.
-            Particles bonded together will be considered a molecule
-        ignore_zero_bond_order : bool, optional, default=False
-            If True, particles without any bonds (i.e., bond order = 0) will be ignored when
-            identifying molecules (i.e., they will not appear in the molecule list).
-            If False, a particle with bond order = 0 will be considered to be a molecule.
-        molecule_dict : dict, dtype=str
-            A dict that defines the molecule 'pattern' and associated user defined name.
-            This is used for renaming molecules automatically identified.
             
     Returns
     -------
@@ -83,7 +67,28 @@ class System(object):
         
     """
     def __init__(self, file=None, frame=0, identify_molecules=True, ignore_zero_bond_order=False, molecule_dict=None):
+        """Initialize the System class.
         
+        This initializes the System class and will load the xml or gsd file if provided.
+        
+        Parameters
+        ----------
+        file : string, default=None
+            Name of the hoomd xml or gsd file to load
+        frame : int, optional, default=0
+        identify_molecules : bool, optional, default=True
+            If True, the code will group the particles based upon their underlying connectivity.
+            Particles bonded together will be considered a molecule
+        ignore_zero_bond_order : bool, optional, default=False
+            If True, particles without any bonds (i.e., bond order = 0) will be ignored when
+            identifying molecules (i.e., they will not appear in the molecule list).
+            If False, a particle with bond order = 0 will be considered to be a molecule.
+        molecule_dict : dict, dtype=str
+            A dict that defines the molecule 'pattern' and associated user defined name.
+            This is used for renaming molecules automatically identified.
+        Returns
+        ------
+        """
         self._filename = None
         self._xyz = []
         self._n_particles = 0
@@ -136,11 +141,30 @@ class System(object):
         
     # essentially the same workflow as the constructor
     def load(self, file=None, frame=0, identify_molecules=True, ignore_zero_bond_order=False, molecule_dict=None):
-    
-
+        """Loads an xml or gsd file.
         
+        This load the xml or GSD file into the system class.
+        
+        Parameters
+        ----------
+        file : string, default=None
+            Name of the hoomd xml or gsd file to load
+        frame : int, optional, default=0
+        identify_molecules : bool, optional, default=True
+            If True, the code will group the particles based upon their underlying connectivity.
+            Particles bonded together will be considered a molecule
+        ignore_zero_bond_order : bool, optional, default=False
+            If True, particles without any bonds (i.e., bond order = 0) will be ignored when
+            identifying molecules (i.e., they will not appear in the molecule list).
+            If False, a particle with bond order = 0 will be considered to be a molecule.
+        molecule_dict : dict, dtype=str
+            A dict that defines the molecule 'pattern' and associated user defined name.
+            This is used for renaming molecules automatically identified.
+        Returns
+        ------
+        """
         if file is None:
-            warn("file not defined")
+            raise Exception("file not defined")
         else:
             self._clear()
             self._identify_molecules = identify_molecules
@@ -159,7 +183,7 @@ class System(object):
             
     def convert_mdtraj(self, mdtraj=None, frame=0, identify_molecules=True, ignore_zero_bond_order=False):
         if mdtraj is None:
-            warn("mdtraj traj not defined")
+            raise Exception("mdtraj traj not defined")
         else:
             self._ignore_zero_bond_order = ignore_zero_bond_order
             self._identify_molecules = identify_molecules
@@ -266,7 +290,7 @@ class System(object):
     # function to load and parse the GSD
     def _load_gsd(self, frame):
         if self._filename is None:
-            warn("gsd_file not defined")
+            raise Exception("gsd_file not defined")
         else:
             f = gsd.hoomd.open(name=self._filename, mode='rb')
             snapshot = f[frame]
@@ -345,6 +369,22 @@ class System(object):
     # and re-assigns names of each molecule found for that pattern.
     
     def set_molecule_name_by_dictionary(self, molecule_dict):
+        """Assign molecule names.
+        
+        This function will assign names to the molecules in the system based upon the provided dictionary.
+        A pattern is constructed by concatenating partice names together into a single string.
+        Unique patterns in the system can be found in the `unique_molecules` dictionary.
+        
+        Parameters
+        ----------
+        molecule_dict : dict, dtype=str
+            A dict that defines the molecule 'pattern' and associated user defined name.
+            This is used for renaming molecules automatically identified.
+            Molecule pattern as the key and associated molecule name as the value in the dict,
+            i.e., {pattern: name}
+        Returns
+        ------
+        """
         for mol_name in molecule_dict:
             self._unique_molecules[mol_name] = molecule_dict[mol_name]
             
@@ -421,7 +461,3 @@ class System(object):
         return self._box
         
             
-"""
-if __name__ == "__main__":
-    print(canvas())
-"""
