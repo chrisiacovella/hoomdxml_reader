@@ -5,7 +5,7 @@ hoomdxml_reader
 [![codecov](https://codecov.io/gh/chrisiacovella/hoomdxml_reader/branch/main/graph/badge.svg)](https://codecov.io/gh/chrisiacovella/hoomdxml_reader/branch/main)
 
 
-# A lightweight module to read legacy hoomdxml files and GSD files.
+# A lightweight module to read legacy hoomdxml files and GSD files and convert to mbuild Compounds.
 Provides basic routines to read and extract information included in hoomdxml files and GSD files, and provides routines to convert to [mbuild](https://github.com/mosdef-hub/mbuild) ``Compounds``.  While there are other packages do support reading hoomdxml files, they do not parse all sections of the file. This code will also perform grouping of atoms into molecules based on connectivity.   
 
 * [Documentation](https://hoomdxml-reader.readthedocs.io/en/latest/)
